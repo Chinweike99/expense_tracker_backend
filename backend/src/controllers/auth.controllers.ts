@@ -43,15 +43,16 @@ const signToken = (id: string) => {
 
 
 // SIGN UP
-export const signup = async(req: Request, res: Response) => {
+export const signup = async(req: Request, res: Response):Promise<void> => {
     try {
         const {name, email, password} = signupSchema.parse(req.body);
         const userExists = await User.findOne({email});
         if(userExists){
-            return res.status(400).json({
+            res.status(400).json({
                 success: false,
                 message: "Email is already registered"
             })
+            return
         };
 
         const newUser = await User.create({name, email, password});
@@ -77,10 +78,11 @@ export const signup = async(req: Request, res: Response) => {
 
     } catch (error) {
         if(error instanceof z.ZodError){
-            return res.status(400).json({
+            res.status(400).json({
                 status: "failed",
                 message: error.errors
             });
+            return
         }
         res.status(500).json({message: "Something went wrong"})
     }
@@ -89,32 +91,35 @@ export const signup = async(req: Request, res: Response) => {
 
 
 // VERIFY EMAIL
-export const verifyEmail = async(req: Request, res: Response) => {
+export const verifyEmail = async(req: Request, res: Response): Promise<void> => {
     try {
         const {token} = verifyEmailSchema.parse(req.query);
 
         //Decode token
         const decodeToken = jwt.decode(token) as {id: string} || null;
         if(!decodeToken || !decodeToken.id){
-            return res.status(400).json({
+             res.status(400).json({
                 message: "Inavlid token"
-            })
+            });
+            return
         }
 
         const user = await User.findById(decodeToken.id);
         if(!user){
-            return res.status(400).json({
+            res.status(400).json({
                 message: "User with token not found"
             })
+            return
         }
         
         // verify token
         jwt.verify(token, jwt_secret + user.password) ;
 
         if(user.isEmailVerified){
-            return res.status(400).json({
+            res.status(400).json({
                 message: "Email is already verified"
-            })
+            });
+            return;
         };
 
         user.isEmailVerified = true;
@@ -134,29 +139,32 @@ export const verifyEmail = async(req: Request, res: Response) => {
 }
 
 
-export const login = async(req: Request, res: Response) => {
+export const login = async(req: Request, res: Response): Promise<void> => {
     try {
         const {email, password} = loginSchema.parse(req.body);
         const user = await User.findOne({email}).select('+password');
         if(!user || !(await user.comparePassword(password))){
-            return res.status(401).json({
+            res.status(401).json({
                 status: "failed",
                 message: "Invalid email or password"
-            })
+            });
+            return 
         }
 
         if(!user.isEmailVerified){
-            return res.status(401).json({message: 'Please verify your email to login'})
+             res.status(401).json({message: 'Please verify your email to login'});
+             return
         }
 
         // Check if 2FA is enabled
         if(user.twoFactorEnabled){
             const tempToken = jwt.sign({id: user._id}, jwt_secret, {expiresIn: '5m'});
-            return res.status(200).json({
+            res.status(200).json({
                 message: '2FA required',
                 tempToken,
                 twoFactorEnabled: true
-            })
+            });
+            return 
         };
 
         // Sign token
@@ -185,10 +193,11 @@ export const login = async(req: Request, res: Response) => {
 
     } catch (error) {
         if(error instanceof z.ZodError){
-            return res.status(400).json({
+             res.status(400).json({
                 message: 'Validation failed',
                 errors: error.errors,
               });
+              return
         };
         res.status(500).json({message: "Something went wrong"});
     }
@@ -196,16 +205,18 @@ export const login = async(req: Request, res: Response) => {
 
 
 // SETUP 2 FACTOR AUTH;
-export const setup2FA = async(req: Request, res: Response) => {
+export const setup2FA = async(req: Request, res: Response): Promise<void> => {
     try {
         const userId = req.user.id;
         const user = await User.findById(userId);
         if(!user){
-            return res.status(404).json({message: "User not found"})
+            res.status(404).json({message: "User not found"});
+            return 
         };
 
         if(user.twoFactorEnabled){
-            return res.status(400).json({message: '2FA already enabled'})
+            res.status(400).json({message: '2FA already enabled'});
+            return;
         };
 
         const secret = speakeasy.generateSecret({
@@ -226,17 +237,18 @@ export const setup2FA = async(req: Request, res: Response) => {
 }
 
 // Verify 2 Factor Authentication
-export const verify2FA = async(req: Request, res: Response) => {
+export const verify2FA = async(req: Request, res: Response): Promise<void> => {
     try {
         const {tempToken, code} =  req.body;
         const decoded = jwt.verify(tempToken, jwt_secret) as {id: string};
         const user = await User.findById(decoded.id).select('+twoFactorSecret');
 
         if(!user || !user.twoFactorSecret){
-            return res.status(400).json({
+             res.status(400).json({
                 status: "failed",
                 message: "Invalid token",
             });
+            return
         }
 
         const verified = speakeasy.totp.verify({
@@ -247,7 +259,8 @@ export const verify2FA = async(req: Request, res: Response) => {
         });
 
         if(!verified){
-            return res.status(401).json({message: "Invalid 2fA code"})
+            res.status(401).json({message: "Invalid 2fA code"});
+            return
         }
 
         const token = signToken(user._id.toString());
@@ -276,16 +289,17 @@ export const verify2FA = async(req: Request, res: Response) => {
 }
 
 // CONFIRM 2 FACTOR AUTH;
-export const confirm2FA = async(req: Request, res: Response)=> {
+export const confirm2FA = async(req: Request, res: Response): Promise<void> => {
     try {
         const { code } = enable2FASchema.parse(req.body);
         const userId = req.user.id
         const user = await User.findById(userId).select('+twoFactorSecret');
 
         if(!user || !user.twoFactorSecret){
-            return res.status(404).json({
+            res.status(404).json({
                 messaage: "User not found or 2FA not setup"
-            })
+            });
+            return 
         };
 
         const verified = speakeasy.totp.verify({
@@ -296,7 +310,8 @@ export const confirm2FA = async(req: Request, res: Response)=> {
         });
 
         if(!verified){
-            return res.status(401).json({message: "invalid 2FA code"})
+            res.status(401).json({message: "invalid 2FA code"});
+            return 
         }
 
         user.twoFactorEnabled = true;
@@ -308,10 +323,11 @@ export const confirm2FA = async(req: Request, res: Response)=> {
         
     } catch (error) {
         if (error instanceof z.ZodError) {
-            return res.status(400).json({
+            res.status(400).json({
               message: 'Validation failed',
               errors: error.errors,
             });
+            return 
           }
           res.status(500).json({ message: 'Something went wrong' });
     }
@@ -319,18 +335,20 @@ export const confirm2FA = async(req: Request, res: Response)=> {
 
 
 // DISABLE 2 FACTOR AUTH
-export const disable2FA = async (req: Request, res: Response) => {
+export const disable2FA = async (req: Request, res: Response): Promise<void> => {
     try {
         const userId = req.user.id;
         const user = await User.findById(userId);
 
         if(!user){
-            return res.status(404).json({
+             res.status(404).json({
                 message: "User not found"
             });
+            return
         };
         if(!user.twoFactorEnabled){
-            return res.status(400).json({message: '2FA not enabled'})
+           res.status(400).json({message: '2FA not enabled'});
+           return
         };
 
         user.twoFactorEnabled = false;
@@ -363,7 +381,7 @@ export const logout = (req: Request, res: Response) => {
 };
 
 
-export const protect = async(req: Request, res: Response, next: NextFunction) => {
+export const protect = async(req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         let token;
         if(req.headers.authorization && req.headers.authorization.startsWith("Bearer")){
@@ -373,17 +391,19 @@ export const protect = async(req: Request, res: Response, next: NextFunction) =>
         };
 
         if(!token){
-            return res.status(401).json({
+            res.status(401).json({
                 message: 'You are not logged in!, Please log in to get access',
-            })
+            });
+            return
         };
 
         const decoded = jwt.verify(token, jwt_secret) as {id: string};
         const currentUser = await User.findById(decoded.id)
         if(!currentUser){
-            return res.status(401).json({
+            res.status(401).json({
                 message: 'User does no longer exist'
             });
+            return 
         }
 
         req.user = currentUser;
