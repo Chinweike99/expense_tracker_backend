@@ -6,6 +6,8 @@ import morgan from 'morgan';
 import { apiLimiter, errorHandler, loginLimiter } from './middlewares/auth.middlewares';
 import authRoutes from './routes/auth.routes'
 import mongoose from 'mongoose';
+import dotenv from 'dotenv'
+dotenv.config();
 
 const app = express();
 
@@ -34,7 +36,7 @@ app.use(errorHandler);
 // connect to Database
 mongoose.connect(process.env.MONGODB_URI!).then(() => {
     console.log("Connected to MongoDB 😎")
-});
+}).catch((error) => console.log("Connection error: ", error));
 
 export default app;
 
