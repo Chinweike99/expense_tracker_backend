@@ -2,10 +2,10 @@ import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv'
 dotenv.config();
 import {z, ZodError} from 'zod'
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { User } from '../models/user.models';
 import { SendEmail } from '../utils/email';
-import speakeasy from 'speakeasy'
+import speakeasy, { otpauthURL } from 'speakeasy'
 
 const jwt_secret = process.env.JWT_SECRET as string || "";
 const jwt_expiresIn = process.env.JWT_EXPIRES_IN;
@@ -195,6 +195,36 @@ export const login = async(req: Request, res: Response) => {
 }
 
 
+// SETUP 2 FACTOR AUTH;
+export const setup2FA = async(req: Request, res: Response) => {
+    try {
+        const userId = req.user.id;
+        const user = await User.findById(userId);
+        if(!user){
+            return res.status(404).json({message: "User not found"})
+        };
+
+        if(user.twoFactorEnabled){
+            return res.status(400).json({message: '2FA already enabled'})
+        };
+
+        const secret = speakeasy.generateSecret({
+            name: `ExpenseTracker:${user.email}`
+        });
+
+        user.twoFactorSecret = secret.base32;
+        await user.save();
+
+        res.status(200).json({
+            secret: secret.base32,
+            otpauthURL: secret.otpauth_url,
+        })
+
+    } catch (error) {
+        res.status(500).json({ message: 'Something went wrong' });
+    }
+}
+
 // Verify 2 Factor Authentication
 export const verify2FA = async(req: Request, res: Response) => {
     try {
@@ -241,10 +271,140 @@ export const verify2FA = async(req: Request, res: Response) => {
         });
 
     } catch (error) {
+        res.status(401).json({ message: 'Invalid or expired token' });
+    }
+}
+
+// CONFIRM 2 FACTOR AUTH;
+export const confirm2FA = async(req: Request, res: Response)=> {
+    try {
+        const { code } = enable2FASchema.parse(req.body);
+        const userId = req.user.id
+        const user = await User.findById(userId).select('+twoFactorSecret');
+
+        if(!user || !user.twoFactorSecret){
+            return res.status(404).json({
+                messaage: "User not found or 2FA not setup"
+            })
+        };
+
+        const verified = speakeasy.totp.verify({
+            secret: user.twoFactorSecret,
+            encoding: 'base32',
+            token: code,
+            window: 1
+        });
+
+        if(!verified){
+            return res.status(401).json({message: "invalid 2FA code"})
+        }
+
+        user.twoFactorEnabled = true;
+        await user.save();
+
+        res.status(200).json({
+            message: "2FA Enabled successfully"
+        })
         
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({
+              message: 'Validation failed',
+              errors: error.errors,
+            });
+          }
+          res.status(500).json({ message: 'Something went wrong' });
+    }
+};
+
+
+// DISABLE 2 FACTOR AUTH
+export const disable2FA = async (req: Request, res: Response) => {
+    try {
+        const userId = req.user.id;
+        const user = await User.findById(userId);
+
+        if(!user){
+            return res.status(404).json({
+                message: "User not found"
+            });
+        };
+        if(!user.twoFactorEnabled){
+            return res.status(400).json({message: '2FA not enabled'})
+        };
+
+        user.twoFactorEnabled = false;
+        user.twoFactorSecret = undefined;
+        await user.save()
+
+        res.status(200).json({ message: '2FA disabled successfully' });
+
+    } catch (error) {
+        res.status(500).json({ message: 'Something went wrong', error });
     }
 }
 
 
+// LOGOUT
+export const logout = (req: Request, res: Response) => {
+   try {
+    res.cookie('jwt', '', {
+        // expires: new Date(Date.now() + 10 * 1000),
+        expires: new Date(0),
+        httpOnly: true
+    });
+    res.status(200).json({
+        status: "success",
+        message: "Logged out successfully"
+    })
+   } catch (error) {
+    res.status(500).json({ message: 'Error Logging out', error });
+   }
+};
+
+
+export const protect = async(req: Request, res: Response, next: NextFunction) => {
+    try {
+        let token;
+        if(req.headers.authorization && req.headers.authorization.startsWith("Bearer")){
+            token = req.headers.authorization.split(' ')[1];
+        }else if(req.cookies.jwt){
+            token = req.cookies.jwt;
+        };
+
+        if(!token){
+            return res.status(401).json({
+                message: 'You are not logged in!, Please log in to get access',
+            })
+        };
+
+        const decoded = jwt.verify(token, jwt_secret) as {id: string};
+        const currentUser = await User.findById(decoded.id)
+        if(!currentUser){
+            return res.status(401).json({
+                message: 'User does no longer exist'
+            });
+        }
+
+        req.user = currentUser;
+        next();
+
+    } catch (error) {
+        res.status(401).json({ message: 'Invalid token' });
+    }
+}
+
+
+// RESTRICTED TO
+export const restrictTo = (...roles: string[]) => {
+    return (req: Request, res: Response, next: Function)=> {
+        if(!roles.includes(req.user.role)){
+            return res.status(403).json({
+                message: "You do not have permission to perform this action"
+            })
+        }
+        next();
+    }
+}
 
 
