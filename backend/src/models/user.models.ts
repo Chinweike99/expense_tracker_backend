@@ -21,11 +21,17 @@ const userSchema = new Schema<IUser>(
         email: {
             type: String,
             required: [true, 'Email is required'],
-            unique: true, lowercase: true, validate: [validator.isEmail, 'Please provide a valid email'],
+            unique: true, 
+            lowercase: true, 
+            validate: [validator.isEmail, 'Please provide a valid email'],
         },
         password: {type: String, required: [true, "Password is required"], minlength: 8, select: false},
-        role: {type: String, enum: ['admin', 'user'], default: 'user'}
-    }, {timestamps: true}
+        role: {type: String, enum: ['admin', 'user'], default: 'user'},
+        isEmailVerified: {type: Boolean, default: false},
+        twoFactorEnabled: {type: Boolean, default: false},
+        twoFactorSecret: {type: String, select: false}
+    }, 
+    {timestamps: true}
 );
 
 // Password hashing middleware

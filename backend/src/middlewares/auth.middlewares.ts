@@ -1,8 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import rateLimit from 'express-rate-limit';
 
-
-
 interface CustomError extends Error {
     statusCode?: number;
     status?: string;
@@ -18,14 +16,13 @@ export const errorHandler = (err: CustomError, req: Request, res: Response, next
       });
 }
 
-
 // RATE LIMIT
 export const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 6
+  max: 10
 })
 
 export const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 50,
+  max: 100,
 })

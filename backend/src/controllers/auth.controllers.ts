@@ -183,7 +183,7 @@ const signToken = (id: string) => {
     })
 }
 
-// SIGN UP - Fixed version
+// SIGN UP 
 export const signup = async(req: Request, res: Response):Promise<void> => {
     try {
         const {name, email, password} = signupSchema.parse(req.body);
@@ -201,7 +201,7 @@ export const signup = async(req: Request, res: Response):Promise<void> => {
             name, 
             email, 
             password,
-            isEmailVerified: false // Ensure this is explicitly set
+            isEmailVerified: false
         });
 
         console.log('User created:', newUser._id); // Debug log
@@ -213,14 +213,15 @@ export const signup = async(req: Request, res: Response):Promise<void> => {
             {expiresIn: '24h'}
         );
 
-        console.log('Verification token generated'); // Debug log
+        console.log('Verification token generated');
 
         // Send verification email
         // const verificationUrl = `${frontend_url}/verify-email?token=${verificationToken}`;
-        const verificationUrl = `/verify-email?token=${verificationToken}`;
+        const url = "http://localhost:5000/api/auth"
+        const verificationUrl = `${url}/verify-email?token=${verificationToken}`;
         
-        console.log('Sending email to:', newUser.email); 
-        console.log('Verification URL:', verificationUrl);
+        console.log('Sending email to:', newUser.email);
+        console.log('Verification URL:', verificationUrl); // Debug log
 
         try {
             await SendEmail({
@@ -231,7 +232,7 @@ export const signup = async(req: Request, res: Response):Promise<void> => {
                         <h2>Welcome ${name}!</h2>
                         <p>Thank you for signing up. Please verify your email address to complete your registration.</p>
                         <div style="text-align: center; margin: 30px 0;">
-                            <a href="${verificationUrl}" 
+                            <a href="${verificationUrl.toString()}" 
                                style="background-color: #007bff; color: white; padding: 12px 24px; 
                                       text-decoration: none; border-radius: 5px; display: inline-block;">
                                 Verify Email Address
@@ -252,7 +253,8 @@ export const signup = async(req: Request, res: Response):Promise<void> => {
             await User.findByIdAndDelete(newUser._id);
             res.status(500).json({
                 status: "failed",
-                message: "Failed to send verification email. Please try again."
+                message: "Failed to send verification email. Please try again.",
+                emailError
             });
             return;
         }
@@ -267,7 +269,7 @@ export const signup = async(req: Request, res: Response):Promise<void> => {
         });
 
     } catch (error) {
-        console.error('Signup error:', error); 
+        console.error('Signup error:', error); // Debug log
         
         if(error instanceof z.ZodError){
             res.status(400).json({
@@ -313,6 +315,7 @@ export const verifyEmail = async(req: Request, res: Response): Promise<void> => 
         }
 
         const user = await User.findById(decoded.userId);
+        console.log('User before verification:', user);
         if(!user){
             res.status(400).json({
                 status: "failed",
@@ -322,7 +325,7 @@ export const verifyEmail = async(req: Request, res: Response): Promise<void> => 
         }
 
         if(user.isEmailVerified){
-            // Redirect to frontend success page
+            
             res.redirect(`${frontend_url}/verification-success?status=already-verified`);
             return;
         };
@@ -331,10 +334,14 @@ export const verifyEmail = async(req: Request, res: Response): Promise<void> => 
         user.isEmailVerified = true;
         await user.save();
 
-        console.log('User verified successfully:', user.email); // Debug log
-
+        console.log('User verified successfully:', user.email);
         // Redirect to frontend success page
-        res.redirect(`${frontend_url}/verification-success?status=verified`);
+        // res.redirect(`${frontend_url}/verification-success?status=verified`); // Use when frontend is added
+
+        res.json({
+            status: "Success",
+            message: "Email verified, you can now log in"
+        });
 
     } catch (error) {
         console.error('Email verification error:', error);
@@ -344,9 +351,6 @@ export const verifyEmail = async(req: Request, res: Response): Promise<void> => 
         })
     }
 }
-
-
-
 
 
 
@@ -364,7 +368,10 @@ export const login = async(req: Request, res: Response): Promise<void> => {
         }
 
         if(!user.isEmailVerified){
-             res.status(401).json({message: 'Please verify your email to login'});
+             res.status(401).json({
+                status: "failed",
+                message: 'Please verify your email to login'
+            });
              return
         }
 
