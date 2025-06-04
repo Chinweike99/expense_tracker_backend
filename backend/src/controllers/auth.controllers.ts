@@ -1,3 +1,147 @@
+// import jwt from 'jsonwebtoken';
+// import dotenv from 'dotenv'
+// dotenv.config();
+// import {z, ZodError} from 'zod'
+// import { NextFunction, Request, Response } from 'express';
+// import { User } from '../models/user.models';
+// import { SendEmail } from '../utils/email';
+// import speakeasy, { otpauthURL } from 'speakeasy'
+
+// const jwt_secret = process.env.JWT_SECRET as string || "";
+// const jwt_expiresIn = process.env.JWT_EXPIRES_IN;
+// const frontend_url = process.env.FRONTEND_URL;
+
+// // zod schemas for validation
+// const signupSchema = z.object({
+//     name: z.string().min(2),
+//     email: z.string().email(),
+//     password: z.string().min(8),
+// });
+
+// const loginSchema = z.object({
+//     email: z.string().email(),
+//     password: z.string().min(8)
+// });
+
+
+// const verifyEmailSchema = z.object({
+//     token: z.string(),
+// });
+
+// const enable2FASchema = z.object({
+//     token: z.string(),
+//     code: z.string().length(6)
+// });
+
+
+// // Helper function to sign token
+// const signToken = (id: string) => {
+//     return jwt.sign({id}, jwt_secret, {
+//         expiresIn: jwt_expiresIn as jwt.SignOptions["expiresIn"]
+//     })
+// }
+
+
+// // SIGN UP
+// export const signup = async(req: Request, res: Response):Promise<void> => {
+//     try {
+//         const {name, email, password} = signupSchema.parse(req.body);
+//         const userExists = await User.findOne({email});
+//         if(userExists){
+//             res.status(400).json({
+//                 success: false,
+//                 message: "Email is already registered"
+//             })
+//             return
+//         };
+
+//         const newUser = await User.create({name, email, password});
+
+//         // Generate verification token
+//         const verificationToken = jwt.sign(
+//             {id: newUser._id}, jwt_secret + newUser.password, {expiresIn: '1d'}
+//         );
+
+//         // Send verification email
+//         const verificationUrl = `${frontend_url}/verify-email?token=${verificationToken}`;
+
+//         await SendEmail({
+//             email: newUser.email,
+//             subject: "Verify Your Email",
+//             html: `Please click <a href="${verificationUrl}"> here</a> to verify your email`
+//         })
+
+//         res.status(201).json({
+//             status: "sucess",
+//             message: "Verification email sent"
+//         })
+
+//     } catch (error) {
+//         if(error instanceof z.ZodError){
+//             res.status(400).json({
+//                 status: "failed",
+//                 message: error.errors
+//             });
+//             return
+//         }
+//         res.status(500).json({message: "Something went wrong"})
+//     }
+// };
+
+
+
+// // VERIFY EMAIL
+// export const verifyEmail = async(req: Request, res: Response): Promise<void> => {
+//     try {
+//         const {token} = verifyEmailSchema.parse(req.query);
+
+//         //Decode token
+//         const decodeToken = jwt.decode(token) as {id: string} || null;
+//         if(!decodeToken || !decodeToken.id){
+//              res.status(400).json({
+//                 message: "Inavlid token"
+//             });
+//             return
+//         }
+
+//         const user = await User.findById(decodeToken.id);
+//         if(!user){
+//             res.status(400).json({
+//                 message: "User with token not found"
+//             })
+//             return
+//         }
+        
+//         // verify token
+//         jwt.verify(token, jwt_secret + user.password) ;
+
+//         if(user.isEmailVerified){
+//             res.status(400).json({
+//                 message: "Email is already verified"
+//             });
+//             return;
+//         };
+
+//         user.isEmailVerified = true;
+//         await user.save();
+
+//         res.status(200).json({
+//             status: "success",
+//             message: "Email verified successfully"
+//         })
+
+//     } catch (error) {
+//         res.status(400).json({
+//             status: "Failed",
+//             message:"Token is invalid, or token is expired"
+//         })
+//     }
+// }
+
+
+
+
+// auth.controller.ts
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv'
 dotenv.config();
@@ -23,7 +167,6 @@ const loginSchema = z.object({
     password: z.string().min(8)
 });
 
-
 const verifyEmailSchema = z.object({
     token: z.string(),
 });
@@ -33,7 +176,6 @@ const enable2FASchema = z.object({
     code: z.string().length(6)
 });
 
-
 // Helper function to sign token
 const signToken = (id: string) => {
     return jwt.sign({id}, jwt_secret, {
@@ -41,8 +183,7 @@ const signToken = (id: string) => {
     })
 }
 
-
-// SIGN UP
+// SIGN UP - Fixed version
 export const signup = async(req: Request, res: Response):Promise<void> => {
     try {
         const {name, email, password} = signupSchema.parse(req.body);
@@ -55,88 +196,159 @@ export const signup = async(req: Request, res: Response):Promise<void> => {
             return
         };
 
-        const newUser = await User.create({name, email, password});
+        // Create user but don't save to main collection yet (or mark as unverified)
+        const newUser = await User.create({
+            name, 
+            email, 
+            password,
+            isEmailVerified: false // Ensure this is explicitly set
+        });
 
-        // Generate verification token
+        console.log('User created:', newUser._id); // Debug log
+
+        // Generate verification token using user ID and a secret
         const verificationToken = jwt.sign(
-            {id: newUser._id}, jwt_secret + newUser.password, {expiresIn: '1d'}
+            {userId: newUser._id.toString()}, 
+            jwt_secret, 
+            {expiresIn: '24h'}
         );
 
-        // Send verification email
-        const verificationUrl = `${frontend_url}/verify-email?token=${verificationToken}`;
+        console.log('Verification token generated'); // Debug log
 
-        await SendEmail({
-            email: newUser.email,
-            subject: "Verify Your Email",
-            html: `Please click <a href="${verificationUrl}"> here</a> to verify your email`
-        })
+        // Send verification email
+        // const verificationUrl = `${frontend_url}/verify-email?token=${verificationToken}`;
+        const verificationUrl = `/verify-email?token=${verificationToken}`;
+        
+        console.log('Sending email to:', newUser.email); 
+        console.log('Verification URL:', verificationUrl);
+
+        try {
+            await SendEmail({
+                email: newUser.email,
+                subject: "Verify Your Email - Action Required",
+                html: `
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                        <h2>Welcome ${name}!</h2>
+                        <p>Thank you for signing up. Please verify your email address to complete your registration.</p>
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="${verificationUrl}" 
+                               style="background-color: #007bff; color: white; padding: 12px 24px; 
+                                      text-decoration: none; border-radius: 5px; display: inline-block;">
+                                Verify Email Address
+                            </a>
+                        </div>
+                        <p>Or copy and paste this link in your browser:</p>
+                        <p style="word-break: break-all; color: #666;">${verificationUrl}</p>
+                        <p><small>This link will expire in 24 hours.</small></p>
+                    </div>
+                `
+            });
+            
+            console.log('Email sent successfully'); // Debug log
+            
+        } catch (emailError) {
+            console.error('Email sending failed:', emailError);
+            // Delete the user if email fails
+            await User.findByIdAndDelete(newUser._id);
+            res.status(500).json({
+                status: "failed",
+                message: "Failed to send verification email. Please try again."
+            });
+            return;
+        }
 
         res.status(201).json({
-            status: "sucess",
-            message: "Verification email sent"
-        })
+            status: "success",
+            message: "Account created! Please check your email for verification link.",
+            data: {
+                userId: newUser._id,
+                email: newUser.email
+            }
+        });
 
     } catch (error) {
+        console.error('Signup error:', error); 
+        
         if(error instanceof z.ZodError){
             res.status(400).json({
                 status: "failed",
-                message: error.errors
+                message: "Validation failed",
+                errors: error.errors
             });
             return
         }
-        res.status(500).json({message: "Something went wrong"})
+        res.status(500).json({
+            status: "failed",
+            message: "Something went wrong during signup"
+        })
     }
 };
 
-
-
-// VERIFY EMAIL
+// VERIFY EMAIL - Improved version
 export const verifyEmail = async(req: Request, res: Response): Promise<void> => {
     try {
         const {token} = verifyEmailSchema.parse(req.query);
 
-        //Decode token
-        const decodeToken = jwt.decode(token) as {id: string} || null;
-        if(!decodeToken || !decodeToken.id){
-             res.status(400).json({
-                message: "Inavlid token"
+        console.log('Verifying token:', token);
+
+        // Verify and decode token
+        let decoded;
+        try {
+            decoded = jwt.verify(token, jwt_secret) as {userId: string};
+        } catch (jwtError) {
+            console.error('JWT verification failed:', jwtError);
+            res.status(400).json({
+                status: "failed",
+                message: "Invalid or expired verification token"
+            });
+            return;
+        }
+
+        if(!decoded || !decoded.userId){
+            res.status(400).json({
+                status: "failed",
+                message: "Invalid token format"
             });
             return
         }
 
-        const user = await User.findById(decodeToken.id);
+        const user = await User.findById(decoded.userId);
         if(!user){
             res.status(400).json({
-                message: "User with token not found"
+                status: "failed",
+                message: "User not found"
             })
             return
         }
-        
-        // verify token
-        jwt.verify(token, jwt_secret + user.password) ;
 
         if(user.isEmailVerified){
-            res.status(400).json({
-                message: "Email is already verified"
-            });
+            // Redirect to frontend success page
+            res.redirect(`${frontend_url}/verification-success?status=already-verified`);
             return;
         };
 
+        // Update user verification status
         user.isEmailVerified = true;
         await user.save();
 
-        res.status(200).json({
-            status: "success",
-            message: "Email verified successfully"
-        })
+        console.log('User verified successfully:', user.email); // Debug log
+
+        // Redirect to frontend success page
+        res.redirect(`${frontend_url}/verification-success?status=verified`);
 
     } catch (error) {
+        console.error('Email verification error:', error);
         res.status(400).json({
-            status: "Failed",
-            message:"Token is invalid, or token is expired"
+            status: "failed",
+            message: "Email verification failed"
         })
     }
 }
+
+
+
+
+
 
 
 export const login = async(req: Request, res: Response): Promise<void> => {

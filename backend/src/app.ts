@@ -28,7 +28,7 @@ app.use('/api/auth/login', loginLimiter);
 
 
 //Routes
-app.use('api/auth', authRoutes);
+app.use('/api/auth', authRoutes);
 
 // Error handling
 app.use(errorHandler);
