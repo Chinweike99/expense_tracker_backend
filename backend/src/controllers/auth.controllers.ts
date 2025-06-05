@@ -388,8 +388,6 @@ export const login = async(req: Request, res: Response): Promise<void> => {
 
         // Sign token
         const token = signToken(user._id.toString());
-
-        // Set Cookie
         res.cookie('jwt', token, {
             expires: new Date(
                 Date.now() + parseInt(process.env.COOKIE_EXPIRES_IN!) * 24 * 60 * 60 * 1000
