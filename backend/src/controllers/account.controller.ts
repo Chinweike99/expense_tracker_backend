@@ -24,14 +24,15 @@ const createCurrencySchema = z.object({
   });
   
 
-export const createAccount = async(req: Request, res: Response) => {
+export const createAccount = async(req: Request, res: Response): Promise<void> => {
     try {
         const userId = req.user.id;
         const {name, type, balance, currency} = createAccountSchema.parse(req.body);
 
         const currencyExist = await Currency.findOne({user: userId, code: currency});
         if(!currencyExist){
-            return res.status(400).json({message: "Currency not found. Please add it first"})
+             res.status(400).json({message: "Currency not found. Please add it first"});
+             return
         };
 
         const account = await Account.create({
@@ -40,23 +41,35 @@ export const createAccount = async(req: Request, res: Response) => {
         res.status(201).json(account);
     } catch (error) {
         if (error instanceof z.ZodError) {
-          return res.status(400).json({
+           res.status(400).json({
             message: 'Validation failed',
             errors: error.errors,
           });
+          return
         }
         res.status(500).json({ message: 'Something went wrong' });
       }
 } 
 
+export const getAccounts = async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user.id;
+      const accounts = await Account.find({ user: userId, isActive: true });
+      res.status(200).json(accounts);
+    } catch (error) {
+      res.status(500).json({ message: 'Something went wrong' });
+    }
+  };
+  
 
 
-export const getAccount = async(req: Request, res: Response) => {
+export const getAccount = async(req: Request, res: Response): Promise<void> => {
     try {
         const userId = req.user.id;
         const account = await Account.findOne({_id: req.params.id, user: userId});
         if(!account){
-            return res.status(404).json({message: "Account not found"})
+             res.status(404).json({message: "Account not found"});
+             return
         };
         res.status(200).json(account)
     }  catch (error) {
@@ -65,7 +78,7 @@ export const getAccount = async(req: Request, res: Response) => {
 }
 
 
-export const updateAccount = async(req: Request, res: Response) => {
+export const updateAccount = async(req: Request, res: Response): Promise<void> => {
     try {
         const userId = (req as any).user.id;
     const updates = updateAccountSchema.parse(req.body);
@@ -77,23 +90,25 @@ export const updateAccount = async(req: Request, res: Response) => {
       );
 
  if (!account) {
-      return res.status(404).json({ message: 'Account not found' });
+        res.status(404).json({ message: 'Account not found' });
+        return
     }
 
     res.status(200).json(account);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({
+      res.status(400).json({
         message: 'Validation failed',
         errors: error.errors,
       });
+      return 
     }
     res.status(500).json({ message: 'Something went wrong' });
   }
 }
 
 
-export const deleteAccount = async (req: Request, res: Response) => {
+export const deleteAccount = async (req: Request, res: Response):Promise<void> => {
     try {
       const userId = (req as any).user.id;
       const account = await Account.findOneAndUpdate(
@@ -103,7 +118,8 @@ export const deleteAccount = async (req: Request, res: Response) => {
       );
   
       if (!account) {
-        return res.status(404).json({ message: 'Account not found' });
+        res.status(404).json({ message: 'Account not found' });
+        return 
       }
   
       res.status(204).json();
@@ -113,10 +129,23 @@ export const deleteAccount = async (req: Request, res: Response) => {
   };
 
 
-  export const addCurrency = async(req: Request, res: Response) => {
+  export const addCurrency = async(req: Request, res: Response): Promise<void> => {
     try {
         const userId = req.user.id;
         const { code, name, symbol, isPrimary} = createCurrencySchema.parse(req.body);
+
+        const existingCurrency = await Currency.findOne({
+            user: userId,
+            code: code
+        });
+        
+        if(existingCurrency){
+            res.status(400).json({
+                status: "failed",
+                message: "Currency already exists"
+            });
+            return;
+        }
 
         if(isPrimary){
             await Currency.updateMany(
@@ -129,6 +158,7 @@ export const deleteAccount = async (req: Request, res: Response) => {
             code, name, symbol, user: userId,
             isPrimary: isPrimary || false
         });
+
 
         // If this is the first currency, set as primary
         const currenciesCount = await Currency.countDocuments({user: userId});
@@ -144,13 +174,15 @@ export const deleteAccount = async (req: Request, res: Response) => {
             }
         }
         res.status(201).json(currency);
+        return;
 
     } catch (error) {
         if (error instanceof z.ZodError) {
-            return res.status(400).json({
+             res.status(400).json({
               message: 'Validation failed',
               errors: error.errors,
             });
+            return
           }
           res.status(500).json({ message: 'Something went wrong' });
     }
@@ -169,7 +201,7 @@ export const deleteAccount = async (req: Request, res: Response) => {
   }
 
 
-export const setPrimaryCurrency = async(req: Request, res: Response) => {
+export const setPrimaryCurrency = async(req: Request, res: Response): Promise<void> => {
     try {
         const userId = req.user.id;
         const currencyId = req.params.id;
@@ -187,7 +219,8 @@ export const setPrimaryCurrency = async(req: Request, res: Response) => {
         );
 
         if (!currency) {
-            return res.status(404).json({ message: 'Currency not found' });
+            res.status(404).json({ message: 'Currency not found' });
+            return 
           }
 
           // Update all exchange rates based on the new primary currency
@@ -200,6 +233,64 @@ export const setPrimaryCurrency = async(req: Request, res: Response) => {
 }
 
 
+export const updateCurrencyRate = async(req:Request, res: Response): Promise<void> => {
+    try {
+        const userId = (req as any).user.id;
+    const primaryCurrency = await Currency.findOne({ user: userId, isPrimary: true });
+
+    if (!primaryCurrency) {
+        res.status(400).json({ message: 'No primary currency set' });
+        return
+      };
+
+      const success = await updateExchangeRate(userId, primaryCurrency.code);
+      if (!success) {
+        res.status(500).json({ message: 'Failed to update exchange rates' });
+        return 
+      }
+
+      const currencies = await Currency.find({user: userId});
+      res.status(200).json(currencies);
+    } catch (error) {
+        res.status(500).json({ message: 'Something went wrong' });
+    }
+};
+
+
+export const deleteCurreny = async(req: Request, res: Response): Promise<void> => {
+    try {
+        const userId = req.user.id;
+    const currencyId = req.params.id;
+
+    // Check if this is the primary currecency
+    const currency = await Currency.findOne({_id: currencyId, user: userId});
+    if (!currency) {
+        res.status(404).json({ message: 'Currency not found' });
+        return 
+      }
+    if (currency.isPrimary) {
+        res.status(400).json({ message: 'Cannot delete primary currency, choose a new Primary currency as to delete' });
+        return
+      }
+      // Check if any accounts are using this currency
+    const accountsUsingCurrency = await Account.countDocuments({
+        user: userId,
+        currency: currency.code,
+        isActive: true,
+      });
+
+      if (accountsUsingCurrency > 0) {
+        res.status(400).json({
+          message: 'Cannot delete currency as it is being used by one or more accounts',
+        });
+        return 
+      }
+      await Currency.deleteOne({ _id: currencyId, user: userId });  
+      res.status(204).json();
+    } catch (error) {
+        res.status(500).json({message: "Something went wrong"})
+    }
+}
 
 
 

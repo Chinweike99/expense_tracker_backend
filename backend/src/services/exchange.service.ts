@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { Currency } from '../models/currency.model';
 
-
 const exchange_rate_key = process.env.EXCHANGE_RATE_API_KEY;
 const BASE_URL = 'https://v6.exchangerate-api.com/v6';
 
@@ -23,7 +22,7 @@ export const updateExchangeRate = async (userId: string, baseCurrency: string) =
             `${BASE_URL}/${exchange_rate_key}/latest/${baseCurrency}`
         );
 
-        console.log(response);
+        console.log(response.data.conversion_rates);
         if(response.data.result !== "success"){
             throw new Error("Failed to fetch exchange rates");
         }
