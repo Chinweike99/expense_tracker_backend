@@ -119,7 +119,7 @@ transactionSchema.pre<ITransaction>("save", async function(next){
 
 
 // Middleware to revert account balance when transaction is deleted
-transactionSchema.pre<ITransaction>('remove', async function(next) {
+transactionSchema.pre<ITransaction>('deleteOne', async function(next) {
     const Account = mongoose.model('Account');
     const account = await Account.findById(this.account);
     
