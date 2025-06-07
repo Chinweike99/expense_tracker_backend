@@ -261,7 +261,7 @@ export const signup = async(req: Request, res: Response):Promise<void> => {
 
         res.status(201).json({
             status: "success",
-            message: "Account created! Please check your email for verification link.",
+            message: "Account created! Please check your email inbox or spam for verification link.",
             data: {
                 userId: newUser._id,
                 email: newUser.email
