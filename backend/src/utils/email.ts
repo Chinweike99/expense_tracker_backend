@@ -35,33 +35,33 @@ import nodemailer from 'nodemailer';
 import dns from 'dns';
 dotenv.config();
 
-dns.setDefaultResultOrder('ipv4first');
+// dns.setDefaultResultOrder('ipv4first');
 
-// console.log('EMAIL_USER:', process.env.EMAIL_USER);
-// console.log('EMAIL_PASS:', process.env.EMAIL_PASS ? '***HIDDEN***' : 'MISSING');
-// console.log('EMAIL_HOST:', process.env.EMAIL_HOST);
-// console.log('EMAIL_PORT:', process.env.EMAIL_PORT);
+// // console.log('EMAIL_USER:', process.env.EMAIL_USER);
+// // console.log('EMAIL_PASS:', process.env.EMAIL_PASS ? '***HIDDEN***' : 'MISSING');
+// // console.log('EMAIL_HOST:', process.env.EMAIL_HOST);
+// // console.log('EMAIL_PORT:', process.env.EMAIL_PORT);
 
-if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    throw new Error('Missing EMAIL_USER or EMAIL_PASS environment variables');
-}
+// if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+//     throw new Error('Missing EMAIL_USER or EMAIL_PASS environment variables');
+// }
 
-const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.EMAIL_PORT!) || 587,
-    secure: false,
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    },
-    tls: {
-        rejectUnauthorized: false,
-    },
-    // authMethod: 'PLAIN', // Explicitly set auth method
-    // connectionTimeout: 60000,
-    // greetingTimeout: 30000,
-    // socketTimeout: 60000,
-} as any);
+// const transporter = nodemailer.createTransport({
+//     host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+//     port: parseInt(process.env.EMAIL_PORT!) || 587,
+//     secure: false,
+//     auth: {
+//         user: process.env.EMAIL_USER,
+//         pass: process.env.EMAIL_PASS
+//     },
+//     tls: {
+//         rejectUnauthorized: false,
+//     },
+//     // authMethod: 'PLAIN', // Explicitly set auth method
+//     // connectionTimeout: 60000,
+//     // greetingTimeout: 30000,
+//     // socketTimeout: 60000,
+// } as any);
 
 interface SendEmailOptions { 
     email: string;
@@ -69,29 +69,51 @@ interface SendEmailOptions {
     html: string;
 }
 
-export const SendEmail = async(options: SendEmailOptions) => {
-    try {
-        console.log('Attempting to verify SMTP connection...');
-        await transporter.verify();
-        console.log('SMTP connection verified successfully');
+// export const SendEmail = async(options: SendEmailOptions) => {
+//     try {
+//         console.log('Attempting to verify SMTP connection...');
+//         await transporter.verify();
+//         console.log('SMTP connection verified successfully');
         
-        const mailOptions = {
-            from: `Expense Tracker <${process.env.EMAIL_USER}>`,
-            to: options.email,
-            subject: options.subject,
-            html: options.html
-        };
+//         const mailOptions = {
+//             from: `Expense Tracker <${process.env.EMAIL_USER}>`,
+//             to: options.email,
+//             subject: options.subject,
+//             html: options.html
+//         };
         
-        console.log('Sending email to:', options.email);
-        const result = await transporter.sendMail(mailOptions);
-        console.log('Email sent successfully:', result.messageId);
-        return result;
-    } catch (error) {
-        console.error('Email sending failed:', error);
-        throw error;
-    }
-};
+//         console.log('Sending email to:', options.email);
+//         const result = await transporter.sendMail(mailOptions);
+//         console.log('Email sent successfully:', result.messageId);
+//         return result;
+//     } catch (error) {
+//         console.error('Email sending failed:', error);
+//         throw error;
+//     }
+// };
 
+
+import sgMail from '@sendgrid/mail';
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
+
+export const SendEmail = async (options: SendEmailOptions) => {
+  try {
+    const msg = {
+      to: options.email,
+      from: `Expense Tracker <${process.env.EMAIL_FROM}>`,
+      subject: options.subject,
+      html: options.html,
+    };
+    
+    const result = await sgMail.send(msg);
+    console.log('Email sent successfully:', result[0].statusCode);
+    return result;
+  } catch (error) {
+    console.error('Email sending failed:', error);
+    throw error;
+  }
+};
 
 
 
@@ -120,7 +142,7 @@ export const sendVerificationEmail = async (email: string, token: string) => {
       });
   
       console.log(
-        `Verification email sent to ${email}. Message ID: ${mailInfo.messageId}`
+        `Verification email sent to ${email}. Message ID: ${mailInfo}`
       );
       return mailInfo;
     } catch (error) {
@@ -154,7 +176,7 @@ export const sendVerificationEmail = async (email: string, token: string) => {
       });
   
       console.log(
-        `Verification email sent to ${email}. Message ID: ${mailInfo.messageId}`
+        `Verification email sent to ${email}. Message ID: ${mailInfo}`
       );
       return mailInfo;
     } catch (error) {
