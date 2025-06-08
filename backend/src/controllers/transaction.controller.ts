@@ -200,9 +200,7 @@ export const updateTransaction = async(req: Request, res: Response) => {
       if (!transaction) {
         return res.status(404).json({ message: 'Transaction not found' });
       }
-res.status(200).json(transaction)  
-
-
+res.status(200).json(transaction) ;
         
     } catch (error) {
         if (error instanceof z.ZodError) {
@@ -215,6 +213,176 @@ res.status(200).json(transaction)
       }
 }
 
+export const deleteTransaction = async(req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user.id;
+        const transaction = await Transaction.findOneAndDelete({
+          _id: req.params.id,
+          user: userId,
+        });
+    
+        if (!transaction) {
+          return res.status(404).json({ message: 'Transaction not found' });
+        }
+    
+        res.status(204).json();
+      } catch (error) {
+        res.status(500).json({ message: 'Something went wrong' });
+      }
+}
+
+export const createTransfer = async (req: Request, res: Response)=>{
+    try {
+        const userId = req.user.id;
+        const { 
+            amount, 
+            description, 
+            date, 
+            fromAccount, 
+            toAccount, 
+            fee, 
+            feeAccount 
+          } = req.body;
+
+          // Validate accounts
+    const from = await Account.findOne({ 
+        _id: fromAccount, 
+        user: userId, 
+        isActive: true 
+      });
+      const to = await Account.findOne({ 
+        _id: toAccount, 
+        user: userId, 
+        isActive: true 
+      });
+
+      if(!from || !to) {
+        return res.status(400).json({ message: 'One or both accounts not found' });
+      }
+
+      const withdrawal = await Transaction.create({
+        amount,
+        description: description || `Transfer to ${to.name}`,
+        date: date ? new Date(date) : new Date(),
+        type: 'expense',
+        account: from._id,
+        user: userId,
+        notes: `Transfer to ${to.name}`,
+    });
+
+    // Create deposit transaction
+    const deposit = await Transaction.create({
+        amount,
+        description: description || `Transfer from ${from.name}`,
+        date: date ? new Date(date) : new Date(),
+        type: 'income',
+        account: to._id,
+        user: userId,
+        notes: `Transfer from ${from.name}`,
+      });
+
+      
+    // Handle transfer fee if applicable
+    let feeTransaction;
+    if (fee && fee > 0) {
+      const feeAcc = feeAccount 
+        ? await Account.findOne({ _id: feeAccount, user: userId, isActive: true })
+        : from;
+
+      if (!feeAcc) {
+        return res.status(400).json({ message: 'Fee account not found' });
+      }
+
+      feeTransaction = await Transaction.create({
+        amount: fee,
+        description: 'Transfer fee',
+        date: date ? new Date(date) : new Date(),
+        type: 'expense',
+        account: feeAcc._id,
+        user: userId,
+        notes: `Fee for transfer from ${from.name} to ${to.name}`,
+      });
+    }
+    res.status(201).json({
+        withdrawal,
+        deposit,
+        fee: feeTransaction,
+      });
+    } catch (error) {
+      res.status(500).json({ message: 'Something went wrong' });
+    }
+}
+
+
+export const getRecurringTransactions = async(req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user.id;
+        const transactions = await Transaction.find({
+          user: userId,
+          isRecurring: true,
+        })
+          .populate('category', 'name icon color')
+          .populate('account', 'name type currency')
+          .sort({ nextRecurringDate: 1 });
+    
+        res.status(200).json(transactions);
+      } catch (error) {
+        res.status(500).json({ message: 'Something went wrong' });
+      }
+};
+
+
+export const updateRecurringTransactions = async(req: Request, res: Response) => {
+    try {
+      const userId = req.user.id;
+      const {frequency, isRecurring} = req.body
+
+      if(frequency && !['daily', 'weekly', 'monthly', 'yearly'].includes(frequency)){
+        return res.status(400).json({ message: 'Invalid frequency' });
+      }
+
+      // Find the original transaction
+    const transaction = await Transaction.findOne({
+      _id: req.params.id,
+      user: userId,
+      isRecurring: true,
+    });
+
+    if (!transaction) {
+      return res.status(404).json({ message: 'Recurring transaction not found' });
+    }
+
+    // Update all transactions in this recurring series
+    await Transaction.updateMany(
+      { 
+        user: userId,
+        $or: [
+          { _id: transaction.recurringId || transaction._id },
+          { recurringId: transaction.recurringId || transaction._id }
+        ]
+      },
+      { frequency, isRecurring }
+    );
+
+    // If turning off recurring, clear nextRecurringDate
+    if (isRecurring === false) {
+      await Transaction.updateMany(
+        { 
+          user: userId,
+          $or: [
+            { _id: transaction.recurringId || transaction._id },
+            { recurringId: transaction.recurringId || transaction._id }
+          ]
+        },
+        { $unset: { nextRecurringDate: "" } }
+      );
+    }
+
+    res.status(200).json({ message: 'Recurring transactions updated' });
+  } catch (error) {
+    res.status(500).json({ message: 'Something went wrong' });
+  }
+}
 
 
 
