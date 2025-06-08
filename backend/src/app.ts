@@ -5,7 +5,8 @@ import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import { apiLimiter, errorHandler, loginLimiter } from './middlewares/auth.middlewares';
 import authRoutes from './routes/auth.routes';
-import accountRoutes from './routes/account.route'
+import accountRoutes from './routes/account.route';
+import transactionRouter from './routes/transaction.routes';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv'
 dotenv.config();
@@ -30,7 +31,8 @@ app.use('/api/auth/login', loginLimiter);
 
 //Routes
 app.use('/api/auth', authRoutes);
-app.use('/api', accountRoutes)
+app.use('/api', accountRoutes);
+app.use('/api', transactionRouter);
 
 
 // Error handling

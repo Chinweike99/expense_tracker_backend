@@ -30,7 +30,7 @@ const createTransactionSchema = z.object({
 
 const updateTransactionSchema = createTransactionSchema.partial();
 
-export const createTransaction = async(req: Request, res: Response) => {
+export const createTransaction = async(req: Request, res: Response): Promise<void> => {
     try {
         const userId = req.user.id;
         const input = createTransactionSchema.parse(req.body);
@@ -42,10 +42,11 @@ export const createTransaction = async(req: Request, res: Response) => {
                 $or: [{ user: userId}, { isDefault: true }]
             });
             if(!category){
-                return res.status(400).json({
+                res.status(400).json({
                     status: "failed",
                     message: "Category does not exist"
-                })
+                });
+                return 
             }
 
         }
@@ -57,10 +58,11 @@ export const createTransaction = async(req: Request, res: Response) => {
         });
 
         if(!account){
-            return res.status(400).json({
+            res.status(400).json({
                 status: "failed",
                 message: "Account does not exist"
-            })
+            });
+            return 
         }
 
         // Handle recurring transaction setup
@@ -82,10 +84,11 @@ export const createTransaction = async(req: Request, res: Response) => {
 
     } catch (error) {
         if (error instanceof z.ZodError) {
-          return res.status(400).json({
+          res.status(400).json({
             message: 'Validation failed',
             errors: error.errors,
           });
+          return 
         }
         res.status(500).json({ message: 'Something went wrong' });
       }
@@ -144,7 +147,7 @@ export const getTransactions = async(req: Request, res: Response) => {
 }
 
 
-export const getTransaction = async(req: Request, res: Response) => {
+export const getTransaction = async(req: Request, res: Response): Promise<void> => {
     try {
         const userId = req.user.id;
         const transaction = await Transaction.findOne({
@@ -153,7 +156,8 @@ export const getTransaction = async(req: Request, res: Response) => {
         }).populate("category", "name icon color").populate('account', 'name type currency');
 
         if(!transaction){
-            return res.status(404).json({message: 'Transaction not found'})
+            res.status(404).json({message: 'Transaction not found'});
+            return 
         }
 
         res.status(200).json(transaction);
@@ -175,7 +179,8 @@ export const updateTransaction = async(req: Request, res: Response) => {
           $or: [{ user: userId }, { isDefault: true }] 
         });
         if (!category) {
-          return res.status(400).json({ message: 'Category not found' });
+          res.status(400).json({ message: 'Category not found' });
+          return 
         }
       }
       
@@ -187,7 +192,8 @@ export const updateTransaction = async(req: Request, res: Response) => {
           isActive: true 
         });
         if (!account) {
-          return res.status(400).json({ message: 'Account not found' });
+          res.status(400).json({ message: 'Account not found' });
+          return 
         }
       }
 
@@ -198,31 +204,34 @@ export const updateTransaction = async(req: Request, res: Response) => {
       );
 
       if (!transaction) {
-        return res.status(404).json({ message: 'Transaction not found' });
+        res.status(404).json({ message: 'Transaction not found' });
+        return 
       }
 res.status(200).json(transaction) ;
         
     } catch (error) {
         if (error instanceof z.ZodError) {
-          return res.status(400).json({
+          res.status(400).json({
             message: 'Validation failed',
             errors: error.errors,
           });
+          return 
         }
         res.status(500).json({ message: 'Something went wrong' });
       }
 }
 
-export const deleteTransaction = async(req: Request, res: Response) => {
+export const deleteTransaction = async(req: Request, res: Response): Promise<void> => {
     try {
-        const userId = (req as any).user.id;
+        const userId = req.user.id;
         const transaction = await Transaction.findOneAndDelete({
           _id: req.params.id,
           user: userId,
         });
     
         if (!transaction) {
-          return res.status(404).json({ message: 'Transaction not found' });
+          res.status(404).json({ message: 'Transaction not found' });
+          return 
         }
     
         res.status(204).json();
@@ -231,7 +240,7 @@ export const deleteTransaction = async(req: Request, res: Response) => {
       }
 }
 
-export const createTransfer = async (req: Request, res: Response)=>{
+export const createTransfer = async (req: Request, res: Response): Promise<void> =>{
     try {
         const userId = req.user.id;
         const { 
@@ -257,7 +266,8 @@ export const createTransfer = async (req: Request, res: Response)=>{
       });
 
       if(!from || !to) {
-        return res.status(400).json({ message: 'One or both accounts not found' });
+        res.status(400).json({ message: 'One or both accounts not found' });
+        return 
       }
 
       const withdrawal = await Transaction.create({
@@ -290,7 +300,8 @@ export const createTransfer = async (req: Request, res: Response)=>{
         : from;
 
       if (!feeAcc) {
-        return res.status(400).json({ message: 'Fee account not found' });
+        res.status(400).json({ message: 'Fee account not found' });
+        return 
       }
 
       feeTransaction = await Transaction.create({
@@ -332,13 +343,14 @@ export const getRecurringTransactions = async(req: Request, res: Response) => {
 };
 
 
-export const updateRecurringTransactions = async(req: Request, res: Response) => {
+export const updateRecurringTransactions = async(req: Request, res: Response): Promise<void> => {
     try {
       const userId = req.user.id;
       const {frequency, isRecurring} = req.body
 
       if(frequency && !['daily', 'weekly', 'monthly', 'yearly'].includes(frequency)){
-        return res.status(400).json({ message: 'Invalid frequency' });
+        res.status(400).json({ message: 'Invalid frequency' });
+        return ;
       }
 
       // Find the original transaction
@@ -349,7 +361,8 @@ export const updateRecurringTransactions = async(req: Request, res: Response) =>
     });
 
     if (!transaction) {
-      return res.status(404).json({ message: 'Recurring transaction not found' });
+      res.status(404).json({ message: 'Recurring transaction not found' });
+      return ;
     }
 
     // Update all transactions in this recurring series

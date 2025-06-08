@@ -2,7 +2,6 @@ import mongoose, { Document, Schema } from "mongoose";
 import { IUser } from "./user.models";
 
 
-
 export interface IAccount extends Document {
     name: string;
     type: 'cash' | 'credit card' | 'investment' | 'loan' | 'other';
