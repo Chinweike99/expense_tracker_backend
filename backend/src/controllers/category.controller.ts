@@ -49,7 +49,7 @@ export const getCategories = async(req: Request, res: Response) => {
             filter.type = type
         }
         const categories = await Category.find(filter).sort({isDefault: 1, name: 1});
-        res.status(400).json(categories)
+        res.status(201).json(categories)
 
     } catch (error) {
         res.status(500).json({ message: 'Unable to get Categories' });

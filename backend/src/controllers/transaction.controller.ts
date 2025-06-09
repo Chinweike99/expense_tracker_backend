@@ -90,7 +90,7 @@ export const createTransaction = async(req: Request, res: Response): Promise<voi
           });
           return 
         }
-        res.status(500).json({ message: 'Something went wrong' });
+        res.status(500).json({ message: 'Something went wrong', error });
       }
 }
 
@@ -320,7 +320,7 @@ export const createTransfer = async (req: Request, res: Response): Promise<void>
         fee: feeTransaction,
       });
     } catch (error) {
-      res.status(500).json({ message: 'Something went wrong' });
+      res.status(500).json({ message: 'Something went wrong', error });
     }
 }
 

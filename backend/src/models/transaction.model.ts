@@ -44,9 +44,9 @@ const transactionSchema = new Schema<ITransaction>(
         category: {
             type: Schema.Types.ObjectId,
             ref: 'Category',
-            required: function(this: ITransaction) {
-                return this.type !== 'transfer';
-            }
+            // required: function(this: ITransaction) {
+            //     return this.type !== 'transfer';
+            // }
         },
         account: { 
             type: Schema.Types.ObjectId, 
@@ -74,8 +74,8 @@ const transactionSchema = new Schema<ITransaction>(
               paid: { type: Boolean, default: false },
             }],
             validate: {
-              validator: function(this: ITransaction, splits: any[]) {
-                if (!splits) return true;
+              validator: function (this: ITransaction, splits: any[]) {
+                if (!splits || splits.length === 0) return true; // ✅ safe skip
                 const totalSplit = splits.reduce((sum, split) => sum + split.amount, 0);
                 return totalSplit === this.amount;
               },
