@@ -13,7 +13,7 @@ const analyticsQuerySchema = z.object({
   type: z.enum(["expense", "income"]).optional(),
 });
 
-export const getDashboardStats = async (req: Request, res: Response) => {
+export const getDashboardStats = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user.id;
     const { startDate, endDate, accounts, categories, type } =
@@ -215,16 +215,19 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "Validation failed",
         errors: error.errors,
       });
+      return 
     }
     res.status(500).json({ message: "Unable to get Dashboard stats" });
   }
 };
 
-export const getSpendingTrends = async (req: Request, res: Response) => {
+
+
+export const getSpendingTrends = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user.id;
     const { startDate, endDate, accounts, categories, type } =
@@ -311,16 +314,17 @@ export const getSpendingTrends = async (req: Request, res: Response) => {
     res.status(200).json(formattedTrends);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({
+       res.status(400).json({
         message: "Validation failed",
         errors: error.errors,
       });
+      return
     }
     res.status(500).json({ message: "Unable to get spending trends" });
   }
 };
 
-export const getCategoryComparison = async (req: Request, res: Response) => {
+export const getCategoryComparison = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).user.id;
     const { startDate, endDate, accounts } = analyticsQuerySchema.parse(
@@ -449,16 +453,17 @@ export const getCategoryComparison = async (req: Request, res: Response) => {
     res.status(200).json(result);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "Validation failed",
         errors: error.errors,
       });
+      return 
     }
     res.status(500).json({ message: "Something went wrong" });
   }
 };
 
-export const getExpenseHeatMap = async (req: Request, res: Response) => {
+export const getExpenseHeatMap = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user.id;
     const { startDate, endDate, accounts, categories } =
@@ -508,16 +513,17 @@ export const getExpenseHeatMap = async (req: Request, res: Response) => {
     res.status(200).json(formattedHeatMap);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({
+       res.status(400).json({
         message: "Validation failed",
         errors: error.errors,
       });
+      return
     }
     res.status(500).json({ message: "Something went wrong" });
   }
 };
 
-export const exportTransactions = async (req: Request, res: Response) => {
+export const exportTransactions = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).user.id;
     const { startDate, endDate, accounts, categories, type } =
@@ -576,17 +582,19 @@ export const exportTransactions = async (req: Request, res: Response) => {
 
       res.setHeader('Content-Type', 'text/csv');
       res.setHeader('Content-Disposition', 'attachment; filename=transactions.csv');
-      return res.status(200).send(csv);
+      res.status(200).send(csv);
+      return 
     } else {
       // Return as JSON
       res.status(200).json(transactions);
     }
   } catch (error) {
     if (error instanceof z.ZodError) {
-        return res.status(400).json({
+       res.status(400).json({
           message: 'Validation failed',
           errors: error.errors,
         });
+        return 
       }
       res.status(500).json({ message: 'Something went wrong' });
   }

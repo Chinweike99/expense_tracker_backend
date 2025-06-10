@@ -7,6 +7,8 @@ import { apiLimiter, errorHandler, loginLimiter } from './middlewares/auth.middl
 import authRoutes from './routes/auth.routes';
 import accountRoutes from './routes/account.route';
 import transactionRouter from './routes/transaction.routes';
+import analyticsRouter from './routes/analytics.routes';
+
 import mongoose from 'mongoose';
 import dotenv from 'dotenv'
 dotenv.config();
@@ -33,6 +35,7 @@ app.use('/api/auth/login', loginLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api', accountRoutes);
 app.use('/api', transactionRouter);
+app.use('/api', analyticsRouter);
 
 
 // Error handling
