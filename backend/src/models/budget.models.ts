@@ -13,7 +13,7 @@ export interface IBudget extends Document {
     period: BudgetPeriod;
     startDate: Date;
     endDate?: Date;
-    category?: ICategory['_id'];
+    category?: ICategory | ICategory['_id'];
     user: IUser['_id'];
     isRecurring: boolean;
     rollover: {
@@ -28,7 +28,7 @@ export interface IBudget extends Document {
     updatedAt: Date;
     spendAmount?: number;
     remainingAmount?: number;
-    progressPercentgae?: number;
+    progressPercentage?: number;
 };
 
 
