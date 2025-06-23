@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { z } from "zod";
 import { Category } from "../models/category.model";
-import { Budget } from "../models/budget.models";
+import { Budget, getPeriodEndDate, getPeriodStartDate } from "../models/budget.models";
 
 
 
@@ -171,9 +171,36 @@ export const deleteBudget = async(req: Request, res: Response) => {
 
 export const getBudgetProgress = async(req: Request, res: Response) => {
     try {
-        
+        const userId = req.user.id;
+        const  budget = await Budget.findOne({
+            _id: req.params.id,
+            user: userId
+        }).populate('category', 'name icon color').select('+spendAmount +remainingAmount +progressPercentage');
+
+        if(!budget){
+            return res.status(404).json({message: 'Budget not found'})
+        }
+
+        res.status(200).json({
+            budget: {
+                _id: budget._id,
+                name: budget.name,
+                amount: budget.amount,
+                period: budget.period,
+                category: budget.category
+            },
+            spent: budget.spendAmount || 0,
+            remaining: budget.remainingAmount || 0,
+            progress: budget.progressPercentage || 0,
+            periodStart: budget.startDate,
+            periodEnd: budget.endDate || getPeriodEndDate(budget.period, new Date())
+        })
+
     } catch (error) {
-        
+        res.status(500).json({
+            success: false,
+            message: "Cannont get budget progress"
+        })
     }
 }
 

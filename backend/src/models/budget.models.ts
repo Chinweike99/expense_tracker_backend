@@ -151,6 +151,6 @@ function getPeriodEndDate(period: BudgetPeriod, date: Date): Date {
   }
 
 
-export {getPeriodStartDate};
+export {getPeriodStartDate, getPeriodEndDate};
 
 export const Budget = mongoose.model<IBudget>("Budget", budgetSchema);
