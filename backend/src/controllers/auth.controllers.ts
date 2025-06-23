@@ -196,6 +196,13 @@ export const signup = async(req: Request, res: Response):Promise<void> => {
             return
         };
 
+        if(!name || !email || !password){
+            res.status(403).json({
+                success: "Failed",
+                message: "Details not correct"
+            })
+        }
+
         // Create user but don't save to main collection yet (or mark as unverified)
         const newUser = await User.create({
             name, 
