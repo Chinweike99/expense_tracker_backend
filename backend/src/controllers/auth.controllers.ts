@@ -634,8 +634,12 @@ export const protect = async(req: Request, res: Response, next: NextFunction): P
         next();
 
     } catch (error) {
-        res.status(401).json({ message: 'Invalid token' });
+        console.log(error)
+        res.status(401).json({
+            success: false,
+            message: 'Invalid token' });
     }
+    
 }
 
 

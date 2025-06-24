@@ -30,6 +30,7 @@ const updateBudgetSchema = createBudgetSchema.partial();
 
 
 export const createBudget = async(req: Request, res: Response): Promise<void> => {
+     console.log("Endpoint Hit")
     try {
             const userId = req.user.id;
             const input = createBudgetSchema.parse(req.body);
@@ -64,6 +65,7 @@ export const createBudget = async(req: Request, res: Response): Promise<void> =>
             })
             res.status(201).json(budget)
     } catch (error) {
+        console.log(error)
         if (error instanceof z.ZodError) {
             res.status(400).json({
               message: 'Validation failed',
@@ -120,6 +122,7 @@ export const getBudget = async(req: Request, res:Response): Promise<void> => {
         }
         res.status(200).json(budget);
     } catch (error) {
+        console.log("Error geting budgets")
         res.status(500).json({
             status: "Failed",
             message: 'Unable to get budget'
@@ -282,12 +285,17 @@ export const getSpendingForecast = async (req: Request, res: Response) => {
     try {
         const userId = req.user.id;
         const alerts = await checkBudgetThresholds(userId);
+        if(!alerts) {
+            res.status(200).json({ message: 'No alerts' });
+        }
+
         res.status(200).json({
             success: true,
             message: "Alert sent",
             data: alerts
         })
     } catch (error) {
+        // console.log("Unable to get budgets", error)
         res.status(500).json({
             success: false,
             message: "Budget Alert Errors"

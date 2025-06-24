@@ -23,6 +23,12 @@ router.route('/budgets')
   .post(createBudget)
   .get(getBudgets);
 
+// Budget alerts
+router.get('/budgets/alerts', getBudgetAlerts);
+router.post('/budgets/process-rollovers', processBudgetRollovers);
+router.post('/budgets/process-rollovers', processBudgetRollovers);
+
+
 router.route('/budgets/:id')
   .get(getBudget)
   .patch(updateBudget)
@@ -31,13 +37,10 @@ router.route('/budgets/:id')
 // Budget progress
 router.get('/budgets/:id/progress', getBudgetProgress);
 
-// Spending forecast
-router.get('/budgets/forecast', getSpendingForecast);
 
-// Budget alerts
-router.get('/budgets/alerts', getBudgetAlerts);
 
-// Budget rollover processing (typically called by a cron job)
-router.post('/budgets/process-rollovers', processBudgetRollovers);
+router.get('/test', (req, res) => {
+    res.send("Test route works!");
+  });
 
 export default router;
