@@ -18,7 +18,7 @@ export interface IBudget extends Document {
     isRecurring: boolean;
     rollover: {
         type: RolloverType;
-        maxAmount?: boolean;
+        maxAmount?: number;
     };
     notifications: {
         enabled: boolean;
