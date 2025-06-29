@@ -21,6 +21,7 @@ export interface IBudget extends Document {
         maxAmount?: number;
     };
     notifications: {
+        method: string;
         enabled: boolean;
         threshold: number;
     };

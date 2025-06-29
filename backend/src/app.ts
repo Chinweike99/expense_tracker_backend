@@ -8,6 +8,7 @@ import authRoutes from './routes/auth.routes'
 import transactionRouter from './routes/transaction.routes'
 import analyticsRouter from './routes/analytics.routes'
 import budgetRouter from './routes/budget.routes'
+import reminderRouter from './routes/reminder.routes';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv'
 dotenv.config();
@@ -35,6 +36,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api', transactionRouter);
 app.use('/api', analyticsRouter);
 app.use('/api', budgetRouter);
+app.use('/api', reminderRouter);
 
 // Error handling
 app.use(errorHandler);

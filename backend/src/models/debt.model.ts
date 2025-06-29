@@ -19,7 +19,7 @@ export interface IDebt extends Document {
     startDate: Date;
     endDate?: Date;
     user: IUser['_id'];
-    account?: IAccount['_id'];
+    account?: IAccount['_id'] | IAccount;
     lender: string;
     isPaid: boolean;
     notes?: string;

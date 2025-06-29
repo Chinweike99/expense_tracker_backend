@@ -11,16 +11,9 @@ const now = new Date('2025-06-11');
 
 
 console.log(getPeriodStartDate('monthly', now));
-// → 2025-06-01T00:00:00.000Z
-
 console.log(getPeriodStartDate('weekly', now));
-// → 2025-06-08T00:00:00.000Z (Sunday before 11th)
-
 console.log(getPeriodStartDate('quarterly', now));
-// → 2025-04-01T00:00:00.000Z
-
 console.log(getPeriodStartDate('yearly', now));
-// → 2025-01-01T00:00:00.000Z
 
 
 app.listen(PORT, ()=>{

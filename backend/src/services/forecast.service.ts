@@ -79,7 +79,7 @@ export const calculateSpendingForecast = async (userId: string, period: 'month' 
 }
 
 
-export const checkBudgetThresholds = async (userId: string) => {
+export const checkBudgetThresholds = async (userId?: string) => {
     try {
         const budgets = await Budget.find({
             user: userId,
