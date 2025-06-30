@@ -423,7 +423,10 @@ export const login = async(req: Request, res: Response): Promise<void> => {
               });
               return
         };
-        res.status(500).json({message: "Something went wrong"});
+        res.status(500).json({
+            success: false,
+            message: "Unable to login",
+        });
     }
 }
 

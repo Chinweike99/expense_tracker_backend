@@ -220,6 +220,7 @@ export const createDebt = async (req: Request, res: Response):Promise<void> => {
       data: createDebt,
     });
   } catch (error) {
+    console.log(error)
     if (error instanceof z.ZodError) {
        res.status(400).json({
         message: "Validation failed",
@@ -230,6 +231,7 @@ export const createDebt = async (req: Request, res: Response):Promise<void> => {
     res.status(500).json({
       success: false,
       message: "Unable to create Debt",
+      error
     });
   }
 };
@@ -431,7 +433,7 @@ export const recordDebtPayment = async(req: Request, res: Response) :Promise<voi
         type: 'expense',
         account: accountId,
         user: userId,
-        category: 'Debt Payment',
+        // category: 'Debt Payment',
         notes: `Debt payment: ${principal.toFixed(2)} principal, ${interest.toFixed(2)} interest`
       });
       res.status(201).json({
@@ -439,7 +441,12 @@ export const recordDebtPayment = async(req: Request, res: Response) :Promise<voi
         transaction,
       });
     } catch (error) {
-      res.status(500).json({ message: 'Something went wrong' });
+        console.log(error)
+      res.status(500).json({ 
+        success: false,
+        message: 'Unable to record debt payment',
+        error: error
+    });
     }
   };
 
