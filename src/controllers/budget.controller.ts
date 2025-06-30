@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { z } from "zod";
 import { Category } from "../models/category.model";
-import { Budget, getPeriodEndDate, getPeriodStartDate } from "../models/budget.models";
+import { Budget, getPeriodEndDate } from "../models/budget.models";
 import mongoose from "mongoose";
 import { calculateSpendingForecast, checkBudgetThresholds } from "../services/forecast.service";
 
@@ -80,9 +80,9 @@ export const createBudget = async(req: Request, res: Response): Promise<void> =>
 
 export const getBudgets = async (req: Request, res: Response) => {
     try {
-      const userId = (req as any).user.id;
+      const userId = req.user.id;
       const { period, active } = req.query;
-  
+        
       const filter: any = { user: userId };
       if (period) filter.period = period;
       if (active === 'true') {
@@ -99,6 +99,7 @@ export const getBudgets = async (req: Request, res: Response) => {
   
       res.status(200).json(budgets);
     } catch (error) {
+        console.log(error)
       res.status(500).json({ message: 'Something went wrong' });
     }
   };
@@ -122,7 +123,7 @@ export const getBudget = async(req: Request, res:Response): Promise<void> => {
         }
         res.status(200).json(budget);
     } catch (error) {
-        console.log("Error geting budgets")
+        console.log("Error geting budgets", error)
         res.status(500).json({
             status: "Failed",
             message: 'Unable to get budget'
@@ -202,7 +203,10 @@ export const deleteBudget = async(req: Request, res: Response) => {
         res.status(204).json()
 
     } catch (error) {
-        res.status(500).json({ message: 'Something went wrong trying to delete budget' });
+        console.log(error)
+        res.status(500).json({ 
+            message: 'Something went wrong trying to delete budget'
+        });
     }
 }
 
@@ -236,6 +240,7 @@ export const getBudgetProgress = async(req: Request, res: Response): Promise<voi
         })
 
     } catch (error) {
+        console.log(error)
         res.status(500).json({
             success: false,
             message: "Cannont get budget progress"
@@ -247,7 +252,7 @@ export const getBudgetProgress = async(req: Request, res: Response): Promise<voi
 
 export const getSpendingForecast = async (req: Request, res: Response) => {
     try {
-      const userId = (req as any).user.id;
+      const userId = req.user.id;
       const period = req.query.period === 'year' ? 'year' : 'month';
       
       const forecast = await calculateSpendingForecast(userId, period);
@@ -276,6 +281,7 @@ export const getSpendingForecast = async (req: Request, res: Response) => {
         forecast: result,
       });
     } catch (error) {
+        console.log(error)
       res.status(500).json({ message: 'Something went wrong' });
     }
   };
@@ -295,7 +301,7 @@ export const getSpendingForecast = async (req: Request, res: Response) => {
             data: alerts
         })
     } catch (error) {
-        // console.log("Unable to get budgets", error)
+        console.log("Unable to get budgets Alerts", error)
         res.status(500).json({
             success: false,
             message: "Budget Alert Errors"
@@ -374,6 +380,7 @@ export const getSpendingForecast = async (req: Request, res: Response) => {
         })
 
     } catch (error) {
+        console.log(error)
         res.status(500).json({
             success: false,
             message: "Unable to process Budget Rollovers"

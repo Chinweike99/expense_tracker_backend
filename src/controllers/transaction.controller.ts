@@ -90,7 +90,7 @@ export const createTransaction = async(req: Request, res: Response): Promise<voi
           });
           return 
         }
-        res.status(500).json({ message: 'Something went wrong', error });
+        res.status(500).json({ message: 'Unable to create transactions', error });
       }
 }
 
@@ -101,7 +101,6 @@ export const getTransactions = async(req: Request, res: Response) => {
         const {
             startDate, endDate, account, category, type, tag, search, limit = 50, skip=0
         } = req.query
-
         const filter: any = {user: userId};
 
         // Date range filter
@@ -142,7 +141,8 @@ export const getTransactions = async(req: Request, res: Response) => {
     });
 
     } catch (error) {
-        res.status(500).json({ message: 'Something went wrong' });
+      console.log(error);
+        res.status(500).json({ message: 'Unable to get transactions', error });
     }
 }
 
@@ -159,10 +159,10 @@ export const getTransaction = async(req: Request, res: Response): Promise<void> 
             res.status(404).json({message: 'Transaction not found'});
             return 
         }
-
         res.status(200).json(transaction);
     } catch (error) {
-        res.status(500).json({ message: 'Something went wrong' });
+      console.log(error)
+        res.status(500).json({ message: 'Failed to get transaction' });
     }
 }
 
@@ -236,7 +236,8 @@ export const deleteTransaction = async(req: Request, res: Response): Promise<voi
     
         res.status(204).json();
       } catch (error) {
-        res.status(500).json({ message: 'Something went wrong' });
+        console.log(error)
+        res.status(500).json({ message: 'Failed to delete transactions' });
       }
 }
 
@@ -320,14 +321,15 @@ export const createTransfer = async (req: Request, res: Response): Promise<void>
         fee: feeTransaction,
       });
     } catch (error) {
-      res.status(500).json({ message: 'Something went wrong', error });
+      console.log(error);
+      res.status(500).json({ message: 'Failed to create transfer', error });
     }
 }
 
 
 export const getRecurringTransactions = async(req: Request, res: Response) => {
     try {
-        const userId = (req as any).user.id;
+        const userId = req.user.id;
         const transactions = await Transaction.find({
           user: userId,
           isRecurring: true,
@@ -338,7 +340,8 @@ export const getRecurringTransactions = async(req: Request, res: Response) => {
     
         res.status(200).json(transactions);
       } catch (error) {
-        res.status(500).json({ message: 'Something went wrong' });
+        console.log(error)
+        res.status(500).json({ message: 'Failed to get recurring transactions' });
       }
 };
 
@@ -393,7 +396,8 @@ export const updateRecurringTransactions = async(req: Request, res: Response): P
 
     res.status(200).json({ message: 'Recurring transactions updated' });
   } catch (error) {
-    res.status(500).json({ message: 'Something went wrong' });
+    console.log(error)
+    res.status(500).json({ message: 'Un able to get recurring transactions' });
   }
 }
 

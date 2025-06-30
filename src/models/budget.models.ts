@@ -111,19 +111,23 @@ budgetSchema.virtual('progressPercentage').get(function(this: IBudget) {
 function getPeriodStartDate(period: BudgetPeriod, date: Date) : Date {
     const d =  new Date(date);
     switch (period){
-        case 'weekly':
+        case 'weekly': {
             d.setDate(d.getDate() - d.getDay());
             break;
-        case 'monthly':
+        }
+        case 'monthly':{
             d.setDate(1);
             break;
-        case 'quarterly':
+        }
+        case 'quarterly': {
             const quarter = Math.floor(d.getMonth() / 3)
             d.setMonth( quarter * 3, 1);
             break;
-        case 'yearly':
+        }
+        case 'yearly': {
             d.setMonth(0, 1);
             break;
+        }
     }
     d.setHours(0, 0, 0, 0);
     return d;
@@ -133,19 +137,23 @@ function getPeriodStartDate(period: BudgetPeriod, date: Date) : Date {
 function getPeriodEndDate(period: BudgetPeriod, date: Date): Date {
     const d = new Date(date);
     switch (period) {
-      case 'weekly':
+      case 'weekly': {
         d.setDate(d.getDate() + (6 - d.getDay())); // End of week (Saturday)
         break;
-      case 'monthly':
+      }
+      case 'monthly': {
         d.setMonth(d.getMonth() + 1, 0);
         break;
-      case 'quarterly':
+      }
+      case 'quarterly':{
         const quarter = Math.floor(d.getMonth() / 3);
         d.setMonth((quarter * 3) + 3, 0);
         break;
-      case 'yearly':
+      }
+      case 'yearly':{
         d.setMonth(11, 31);
         break;
+      }
     }
     d.setHours(23, 59, 59, 999);
     return d;

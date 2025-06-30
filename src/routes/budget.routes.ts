@@ -6,7 +6,6 @@ import {
   updateBudget,
   deleteBudget,
   getBudgetProgress,
-  getSpendingForecast,
   getBudgetAlerts,
   processBudgetRollovers,
 } from '../controllers/budget.controller';

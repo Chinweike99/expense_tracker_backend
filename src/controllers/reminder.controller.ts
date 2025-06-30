@@ -4,7 +4,6 @@ import { Transaction } from "../models/transaction.model";
 import { Reminder } from "../models/reminder.model";
 import { Account } from "../models/account.models";
 import { Debt } from "../models/debt.model";
-import { debugPort } from "process";
 import { calculateDebtPayoff } from "../services/notification.service";
 
 const createRemindersSchema = z.object({
@@ -107,7 +106,6 @@ export const getReminders = async (req: Request, res: Response) => {
   try {
     const userId = req.user.id;
     const { type, upcoming } = req.query;
-
     const filter: any = { user: userId, isActive: true };
     if (type) filter.type = type;
     if (upcoming === "true") {
@@ -240,7 +238,6 @@ export const getDebts = async (req: Request, res: Response) => {
   try {
     const userId = req.user.id;
     const { type, paid } = req.query;
-
     const filter: any = { user: userId };
     if (type) filter.type = type;
     if (paid === "true") filter.isPaid = true;
@@ -280,6 +277,7 @@ export const getDebt = async(req: Request, res: Response): Promise<void> => {
             message: fetch_debt
         })
     } catch (error) {
+      console.log(error)
         res.status(500).json({ 
             success: false,
             message: 'Failed to get debt' 
@@ -339,6 +337,7 @@ export const deleteDebt = async(req: Request, res: Response) => {
             message: "Debt deleted successfully"
         })
     } catch (error) {
+      console.log(error)
         res.status(500).json({ 
             success: false,
             message: 'Unable to delete debt' 
@@ -377,7 +376,7 @@ export const calculatePayoffPlan = async(req: Request, res: Response) : Promise<
     } catch (error) {
         res.status(500).json({ 
             success: false,
-            message: 'Failed to get calaulate pay off plan' 
+            message: 'Failed to get calaulate pay off plan', error
         });
     }
 }

@@ -52,6 +52,7 @@ export const getCategories = async(req: Request, res: Response) => {
         res.status(201).json(categories)
 
     } catch (error) {
+      console.log(error)
         res.status(500).json({ message: 'Unable to get Categories' });
     }
 }
@@ -59,7 +60,7 @@ export const getCategories = async(req: Request, res: Response) => {
 
 export const updateCategory = async (req: Request, res: Response): Promise<void> => {
     try {
-      const userId = (req as any).user.id;
+      const userId = req.user.id;
       const updates = updateCategorySchema.parse(req.body);
   
       const category = await Category.findOneAndUpdate(
@@ -82,7 +83,7 @@ export const updateCategory = async (req: Request, res: Response): Promise<void>
         });
         return
       }
-      res.status(500).json({ message: 'Something went wrong' });
+      res.status(500).json({ message: 'Unable to update category' });
     }
   };
 
@@ -115,6 +116,7 @@ export const updateCategory = async (req: Request, res: Response): Promise<void>
   
       res.status(204).json();
     } catch (error) {
+      console.log(error)
       res.status(500).json({ message: 'Something went wrong' });
     }
   };
@@ -161,6 +163,7 @@ export const updateCategory = async (req: Request, res: Response): Promise<void>
   
       res.status(201).json({ message: 'Default categories created' });
     } catch (error) {
+      console.log(error)
       res.status(500).json({ message: 'Something went wrong' });
     }
   };

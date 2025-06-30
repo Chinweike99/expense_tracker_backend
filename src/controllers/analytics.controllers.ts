@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import moment from "moment";
 import { z } from "zod";
 import { Account, IAccount } from "../models/account.models";
-import { ITransaction, Transaction } from "../models/transaction.model";
+import { Transaction } from "../models/transaction.model";
 import { Category, ICategory } from "../models/category.model";
 
 const analyticsQuerySchema = z.object({
@@ -149,6 +149,7 @@ export const getDashboardStats = async (req: Request, res: Response): Promise<vo
     ]);
 
     // Helper function to extract total from aggregation result
+
     const getTotal = (result: any[]) =>
       result.length > 0 ? result[0].total : 0;
 
@@ -169,11 +170,12 @@ export const getDashboardStats = async (req: Request, res: Response): Promise<vo
 
     // Get category details for category spending
     const categoryDetails = await Category.find({
-      _id: { $in: categorySpending.map((cat: any) => cat._id) },
+      _id: { $in: categorySpending.map((cat) => cat._id) },
     });
 
-    const enrichedCategorySpending = categorySpending.map((cat: any) => {
+    const enrichedCategorySpending = categorySpending.map((cat) => {
       const detail = categoryDetails.find((d) =>
+    
         (d as any)._id.equals(cat._id)
       );
       return {
@@ -235,13 +237,14 @@ export const getSpendingTrends = async (req: Request, res: Response): Promise<vo
     const period = req.query.period || "month"; // day, week, month, year
 
     // Parse filter paramters
+
     const filter: any = { user: userId, type: "expense" };
     if (startDate || endDate) {
       filter.date = {};
       if (startDate) filter.date.$gte = new Date(startDate);
       if (endDate) filter.date.$lte = new Date(endDate);
     }
-
+    if(type) filter.type = type;
     if (accounts) filter.account = { $in: accounts.split(",") };
     if (categories) filter.categories = { $in: categories.split(",") };
 
@@ -326,13 +329,14 @@ export const getSpendingTrends = async (req: Request, res: Response): Promise<vo
 
 export const getCategoryComparison = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = (req as any).user.id;
+    const userId = req.user.id;
     const { startDate, endDate, accounts } = analyticsQuerySchema.parse(
       req.query
     );
     const compareWith = req.query.compareWith || "previousPeriod"; // previousPeriod, samePeriodLastYear
 
     // Parse filter parameters
+
     const filter: any = { user: userId, type: "expense" };
     if (startDate || endDate) {
       filter.date = {};
@@ -342,6 +346,7 @@ export const getCategoryComparison = async (req: Request, res: Response): Promis
     if (accounts) filter.account = { $in: accounts.split(",") };
 
     // Determine comparison period
+
     let comparisonFilter: any = { user: userId, type: "expense" };
     if (compareWith === "previousPeriod") {
       if (startDate && endDate) {
@@ -420,7 +425,8 @@ export const getCategoryComparison = async (req: Request, res: Response): Promis
         c._id?.equals(categoryId)
       ) || { total: 0, count: 0 };
       const category = categoryDetails.find((d) =>
-        (d._id as any).equals(categoryId)
+    
+        (d as any)._id.equals(categoryId)
       );
 
       // Calculate percentage change
@@ -470,6 +476,7 @@ export const getExpenseHeatMap = async (req: Request, res: Response): Promise<vo
       analyticsQuerySchema.parse(req.query);
 
     // Parse filter parameters
+
     const filter: any = { user: userId, type: "expense" };
     if (startDate || endDate) {
       filter.date = {};
@@ -528,12 +535,13 @@ export const getExpenseHeatMap = async (req: Request, res: Response): Promise<vo
 // Download transactions
 export const exportTransactions = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = (req as any).user.id;
+    const userId = req.user.id;
     const { startDate, endDate, accounts, categories, type } =
       analyticsQuerySchema.parse(req.query);
     const format = req.query.format || "csv"; // csv, json
 
     // Parse filter parameters
+
     const filter: any = { user: userId };
     if (startDate || endDate) {
       filter.date = {};

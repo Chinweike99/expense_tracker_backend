@@ -53,11 +53,14 @@ export const createAccount = async(req: Request, res: Response): Promise<void> =
 
 export const getAccounts = async (req: Request, res: Response) => {
     try {
-      const userId = (req as any).user.id;
+      const userId = req.user.id;
       const accounts = await Account.find({ user: userId, isActive: true });
       res.status(200).json(accounts);
     } catch (error) {
-      res.status(500).json({ message: 'Something went wrong' });
+      res.status(500).json({ 
+        message: 'Unable to get accounts',
+        error
+      });
     }
   };
   
@@ -73,14 +76,17 @@ export const getAccount = async(req: Request, res: Response): Promise<void> => {
         };
         res.status(200).json(account)
     }  catch (error) {
-        res.status(500).json({ message: 'Something went wrong' });
+        res.status(500).json({ 
+          message: 'Error getting account',
+          error
+        });
       }
 }
 
 
 export const updateAccount = async(req: Request, res: Response): Promise<void> => {
     try {
-        const userId = (req as any).user.id;
+        const userId = req.user.id;
     const updates = updateAccountSchema.parse(req.body);
 
     const account = await Account.findOneAndUpdate(
@@ -110,7 +116,7 @@ export const updateAccount = async(req: Request, res: Response): Promise<void> =
 
 export const deleteAccount = async (req: Request, res: Response):Promise<void> => {
     try {
-      const userId = (req as any).user.id;
+      const userId = req.user.id;
       const account = await Account.findOneAndUpdate(
         { _id: req.params.id, user: userId },
         { isActive: false },
@@ -124,7 +130,10 @@ export const deleteAccount = async (req: Request, res: Response):Promise<void> =
   
       res.status(204).json();
     } catch (error) {
-      res.status(500).json({ message: 'Something went wrong' });
+      res.status(500).json({ 
+        message: 'Error deleting account',
+        error
+      });
     }
   };
 
@@ -196,7 +205,8 @@ export const deleteAccount = async (req: Request, res: Response):Promise<void> =
         const currencies = await Currency.find({user: userId});
         res.status(200).json(currencies)
     } catch (error) {
-        res.status(500).json({ message: 'Something went wrong' });
+        console.log(error)
+        res.status(500).json({ message: 'Unable to add currency' });
     }
   }
 
@@ -228,14 +238,14 @@ export const setPrimaryCurrency = async(req: Request, res: Response): Promise<vo
           res.status(200).json(currency)
 
     } catch (error) {
-        res.status(500).json({ message: 'Something went wrong' });
+        res.status(500).json({ message: 'Unable to set Primary currecny', error });
     }
 }
 
 
 export const updateCurrencyRate = async(req:Request, res: Response): Promise<void> => {
     try {
-        const userId = (req as any).user.id;
+        const userId = req.user.id;
     const primaryCurrency = await Currency.findOne({ user: userId, isPrimary: true });
 
     if (!primaryCurrency) {
@@ -252,7 +262,7 @@ export const updateCurrencyRate = async(req:Request, res: Response): Promise<voi
       const currencies = await Currency.find({user: userId});
       res.status(200).json(currencies);
     } catch (error) {
-        res.status(500).json({ message: 'Something went wrong' });
+        res.status(500).json({ message: 'Failed to update currency rate', error });
     }
 };
 
@@ -288,7 +298,7 @@ export const deleteCurreny = async(req: Request, res: Response): Promise<void> =
       await Currency.deleteOne({ _id: currencyId, user: userId });  
       res.status(204).json();
     } catch (error) {
-        res.status(500).json({message: "Something went wrong"})
+        res.status(500).json({message: "Failed to delete currency", error})
     }
 }
 

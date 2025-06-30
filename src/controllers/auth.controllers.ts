@@ -1,155 +1,11 @@
-// import jwt from 'jsonwebtoken';
-// import dotenv from 'dotenv'
-// dotenv.config();
-// import {z, ZodError} from 'zod'
-// import { NextFunction, Request, Response } from 'express';
-// import { User } from '../models/user.models';
-// import { SendEmail } from '../utils/email';
-// import speakeasy, { otpauthURL } from 'speakeasy'
-
-// const jwt_secret = process.env.JWT_SECRET as string || "";
-// const jwt_expiresIn = process.env.JWT_EXPIRES_IN;
-// const frontend_url = process.env.FRONTEND_URL;
-
-// // zod schemas for validation
-// const signupSchema = z.object({
-//     name: z.string().min(2),
-//     email: z.string().email(),
-//     password: z.string().min(8),
-// });
-
-// const loginSchema = z.object({
-//     email: z.string().email(),
-//     password: z.string().min(8)
-// });
-
-
-// const verifyEmailSchema = z.object({
-//     token: z.string(),
-// });
-
-// const enable2FASchema = z.object({
-//     token: z.string(),
-//     code: z.string().length(6)
-// });
-
-
-// // Helper function to sign token
-// const signToken = (id: string) => {
-//     return jwt.sign({id}, jwt_secret, {
-//         expiresIn: jwt_expiresIn as jwt.SignOptions["expiresIn"]
-//     })
-// }
-
-
-// // SIGN UP
-// export const signup = async(req: Request, res: Response):Promise<void> => {
-//     try {
-//         const {name, email, password} = signupSchema.parse(req.body);
-//         const userExists = await User.findOne({email});
-//         if(userExists){
-//             res.status(400).json({
-//                 success: false,
-//                 message: "Email is already registered"
-//             })
-//             return
-//         };
-
-//         const newUser = await User.create({name, email, password});
-
-//         // Generate verification token
-//         const verificationToken = jwt.sign(
-//             {id: newUser._id}, jwt_secret + newUser.password, {expiresIn: '1d'}
-//         );
-
-//         // Send verification email
-//         const verificationUrl = `${frontend_url}/verify-email?token=${verificationToken}`;
-
-//         await SendEmail({
-//             email: newUser.email,
-//             subject: "Verify Your Email",
-//             html: `Please click <a href="${verificationUrl}"> here</a> to verify your email`
-//         })
-
-//         res.status(201).json({
-//             status: "sucess",
-//             message: "Verification email sent"
-//         })
-
-//     } catch (error) {
-//         if(error instanceof z.ZodError){
-//             res.status(400).json({
-//                 status: "failed",
-//                 message: error.errors
-//             });
-//             return
-//         }
-//         res.status(500).json({message: "Something went wrong"})
-//     }
-// };
-
-
-
-// // VERIFY EMAIL
-// export const verifyEmail = async(req: Request, res: Response): Promise<void> => {
-//     try {
-//         const {token} = verifyEmailSchema.parse(req.query);
-
-//         //Decode token
-//         const decodeToken = jwt.decode(token) as {id: string} || null;
-//         if(!decodeToken || !decodeToken.id){
-//              res.status(400).json({
-//                 message: "Inavlid token"
-//             });
-//             return
-//         }
-
-//         const user = await User.findById(decodeToken.id);
-//         if(!user){
-//             res.status(400).json({
-//                 message: "User with token not found"
-//             })
-//             return
-//         }
-        
-//         // verify token
-//         jwt.verify(token, jwt_secret + user.password) ;
-
-//         if(user.isEmailVerified){
-//             res.status(400).json({
-//                 message: "Email is already verified"
-//             });
-//             return;
-//         };
-
-//         user.isEmailVerified = true;
-//         await user.save();
-
-//         res.status(200).json({
-//             status: "success",
-//             message: "Email verified successfully"
-//         })
-
-//     } catch (error) {
-//         res.status(400).json({
-//             status: "Failed",
-//             message:"Token is invalid, or token is expired"
-//         })
-//     }
-// }
-
-
-
-
-// auth.controller.ts
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv'
 dotenv.config();
-import {z, ZodError} from 'zod'
+import {z} from 'zod'
 import { NextFunction, Request, Response } from 'express';
 import { User } from '../models/user.models';
 import { SendEmail } from '../utils/email';
-import speakeasy, { otpauthURL } from 'speakeasy'
+import speakeasy from 'speakeasy'
 
 const jwt_secret = process.env.JWT_SECRET as string || "";
 const jwt_expiresIn = process.env.JWT_EXPIRES_IN;
@@ -459,6 +315,7 @@ export const setup2FA = async(req: Request, res: Response): Promise<void> => {
         })
 
     } catch (error) {
+        console.log(error)
         res.status(500).json({ message: 'Something went wrong' });
     }
 }
@@ -511,6 +368,7 @@ export const verify2FA = async(req: Request, res: Response): Promise<void> => {
         });
 
     } catch (error) {
+        console.log(error);
         res.status(401).json({ message: 'Invalid or expired token' });
     }
 }
@@ -603,6 +461,7 @@ export const logout = (req: Request, res: Response) => {
         message: "Logged out successfully"
     })
    } catch (error) {
+    console.log(error)
     res.status(500).json({ message: 'Error Logging out', error });
    }
 };

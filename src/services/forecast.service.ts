@@ -34,6 +34,7 @@ export const calculateSpendingForecast = async (userId: string, period: 'month' 
         ])
 
         // Group by category and calculate averages
+        
         const categoryForecasts: Record<string, any> = {};
 
         transactions.forEach(tx => {
@@ -56,6 +57,7 @@ export const calculateSpendingForecast = async (userId: string, period: 'month' 
 
                 // Simple trend claculation (linear rrgression slope)
                 if(data.totals.length > 1) {
+                  
                     const x = data.totals.map((_: any, i: number) => i);
                     const y = data.totals;
                     const n = y.length;
@@ -120,19 +122,23 @@ export const checkBudgetThresholds = async (userId?: string) => {
 function getPeriodStartDate(period: string, date: Date) :Date {
     const d = new Date(date);
     switch (period){
-        case 'weekly':
+        case 'weekly':{
       d.setDate(d.getDate() - d.getDay());
       break;
-    case 'monthly':
+        }
+    case 'monthly': {
       d.setDate(1);
       break;
-    case 'quarterly':
+    }
+    case 'quarterly': {
       const quarter = Math.floor(d.getMonth() / 3);
       d.setMonth(quarter * 3, 1);
       break;
-    case 'yearly':
+    }
+    case 'yearly':{
       d.setMonth(0, 1);
       break;
+    }
     }
     d.setHours(0, 0, 0, 0);
   return d;

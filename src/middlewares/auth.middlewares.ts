@@ -14,6 +14,7 @@ export const errorHandler = (err: CustomError, req: Request, res: Response, next
         status: err.status,
         message: err.message,
       });
+      next();
 }
 
 // RATE LIMIT

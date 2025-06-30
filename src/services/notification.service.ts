@@ -1,4 +1,3 @@
-import { updateBudget } from "../controllers/budget.controller";
 import { IAccount } from "../models/account.models";
 import { Budget } from "../models/budget.models";
 import { Debt, PaymentFrequency } from "../models/debt.model";
