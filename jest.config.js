@@ -29,7 +29,7 @@ const config = {
     testEnvironment: 'node',
     extensionsToTreatAsEsm: ['.ts'],
     moduleNameMapper: {
-      '^(\\.{1,2}/.*)\\.js$': '$1', // Add this for ESM support
+      '^(\\.{1,2}/.*)\\.js$': '$1', 
     },
     transform: {
       '^.+\\.ts$': [
@@ -42,7 +42,6 @@ const config = {
       ],
     },
     transformIgnorePatterns: [
-      // Update this to ignore all node_modules except your ESM packages
       'node_modules/(?!.*\\.mjs$|your-esm-packages)',
     ],
     // Add these for better test reporting
