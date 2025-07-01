@@ -35,9 +35,6 @@ const mockResponse = () => {
     return res as Response;
 }
 
-// const mockNext = jest.fn() as NextFunction
-
-
 // SIGNUP TEST
 describe('signup', () =>{
     beforeEach(() => {
