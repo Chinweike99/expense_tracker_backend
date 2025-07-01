@@ -111,7 +111,7 @@ export const signup = async(req: Request, res: Response):Promise<void> => {
             console.log('Email sent successfully'); // Debug log
             
         } catch (emailError) {
-            console.error('Email sending failed:', emailError);
+            console.log('Email sending failed:', emailError);
             // Delete the user if email fails
             await User.findByIdAndDelete(newUser._id);
             res.status(500).json({
