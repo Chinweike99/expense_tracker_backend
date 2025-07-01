@@ -27,6 +27,9 @@ app.use(morgan('dev'));
 
 
 // Rate Limiting
+app.get('/', (req, res) => {
+    res.send('Expense Tracker API ...')
+})
 app.use('/api', apiLimiter);
 app.use('/api/auth/login', loginLimiter);
 
