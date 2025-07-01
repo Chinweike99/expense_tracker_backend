@@ -111,7 +111,7 @@ export const signup = async(req: Request, res: Response):Promise<void> => {
             console.log('Email sent successfully'); // Debug log
             
         } catch (emailError) {
-            console.error('Email sending failed:', emailError);
+            console.log('Email sending failed:', emailError);
             // Delete the user if email fails
             await User.findByIdAndDelete(newUser._id);
             res.status(500).json({
@@ -132,7 +132,7 @@ export const signup = async(req: Request, res: Response):Promise<void> => {
         });
 
     } catch (error) {
-        console.error('Signup error:', error); // Debug log
+        console.log('Signup error:', error); // Debug log
         
         if(error instanceof z.ZodError){
             res.status(400).json({
@@ -368,7 +368,7 @@ export const verify2FA = async(req: Request, res: Response): Promise<void> => {
         });
 
     } catch (error) {
-        console.log(error);
+        console.log(error)
         res.status(401).json({ message: 'Invalid or expired token' });
     }
 }

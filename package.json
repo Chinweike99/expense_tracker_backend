@@ -112,7 +112,6 @@
     "is-number": "^7.0.0",
     "is-promise": "^4.0.0",
     "is-stream": "^2.0.1",
-    "jest": "^30.0.3",
     "jsonwebtoken": "^9.0.2",
     "jwa": "^1.4.2",
     "jws": "^3.2.2",
@@ -222,6 +221,7 @@
     "zod": "^3.25.28"
   },
   "devDependencies": {
+    "@babel/preset-typescript": "^7.27.1",
     "@types/cookie-parser": "^1.4.8",
     "@types/cors": "^2.8.18",
     "@types/express": "^5.0.2",
@@ -235,7 +235,9 @@
     "@types/validator": "^13.15.1",
     "cross-env": "^7.0.3",
     "eslint": "^9.30.0",
+    "jest": "^30.0.3",
     "nodemon": "^3.1.10",
+    "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3"
