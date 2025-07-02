@@ -46,11 +46,11 @@ export const configCors = ()=> {
 
 //Middlewares
 app.use(helmet());
-app.use(configCors());
+app.use(configCors());                
+app.options("*", configCors());  
 app.use(express.json());
 app.use(cookieParser());
 app.use(morgan('dev'));
-
 
 // Rate Limiting
 app.get('/', (req, res) => {
