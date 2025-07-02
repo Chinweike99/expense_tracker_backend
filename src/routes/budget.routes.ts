@@ -17,7 +17,6 @@ const router = express.Router();
 // Protect all routes after this middleware
 router.use(protect);
 
-// Budget CRUD routes
 router.route('/budgets')
   .post(createBudget)
   .get(getBudgets);
@@ -25,7 +24,7 @@ router.route('/budgets')
 // Budget alerts
 router.get('/budgets/alerts', getBudgetAlerts);
 router.post('/budgets/process-rollovers', processBudgetRollovers);
-router.post('/budgets/process-rollovers', processBudgetRollovers);
+// router.post('/budgets/process-rollovers', processBudgetRollovers);
 
 
 router.route('/budgets/:id')
@@ -33,9 +32,7 @@ router.route('/budgets/:id')
   .patch(updateBudget)
   .delete(deleteBudget);
 
-// Budget progress
 router.get('/budgets/:id/progress', getBudgetProgress);
-
 
 
 router.get('/test', (req, res) => {
