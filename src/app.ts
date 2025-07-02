@@ -56,8 +56,8 @@ app.use(morgan('dev'));
 app.get('/', (req, res) => {
     res.send('Expense Tracker API ...')
 })
-app.use('/api', apiLimiter);
 app.use('/api/auth/login', loginLimiter);
+app.use('/api', apiLimiter);
 
 
 //Routes
