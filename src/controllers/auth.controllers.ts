@@ -80,7 +80,7 @@ export const signup = async(req: Request, res: Response):Promise<void> => {
 
         // Send verification email
         // const verificationUrl = `${frontend_url}/verify-email?token=${verificationToken}`;
-        const url = "http://localhost:5000/api/auth"
+        const url = "https://expense-tracker-frontend-fuxw.onrender.com"
         const verificationUrl = `${url}/verify-email?token=${verificationToken}`;
         
         console.log('Sending email to:', newUser.email);
