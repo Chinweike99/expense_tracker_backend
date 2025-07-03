@@ -67,7 +67,7 @@ export const signup = async(req: Request, res: Response):Promise<void> => {
             isEmailVerified: false
         });
 
-        console.log('User created:', newUser._id); // Debug log
+        console.log('User created:', newUser._id);
 
         // Generate verification token using user ID and a secret
         const verificationToken = jwt.sign(
