@@ -271,7 +271,8 @@ export const login = async(req: Request, res: Response): Promise<void> => {
             }
         })
 
-    } catch (error) {
+    } catch (error: any) {
+        console.log(error)
         if(error instanceof z.ZodError){
              res.status(400).json({
                 message: 'Validation failed',
@@ -282,6 +283,7 @@ export const login = async(req: Request, res: Response): Promise<void> => {
         res.status(500).json({
             success: false,
             message: "Unable to login",
+            error: error.message
         });
     }
 }
