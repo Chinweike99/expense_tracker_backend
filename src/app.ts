@@ -9,6 +9,7 @@ import transactionRouter from './routes/transaction.routes'
 import analyticsRouter from './routes/analytics.routes'
 import budgetRouter from './routes/budget.routes'
 import reminderRouter from './routes/reminder.routes';
+import accountRouter from './routes/account.route';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv'
 dotenv.config();
@@ -63,6 +64,7 @@ app.use('/api', apiLimiter);
 
 //Routes
 app.use('/api/auth', authRoutes);
+app.use('/api', accountRouter);
 app.use('/api', transactionRouter);
 app.use('/api', analyticsRouter);
 app.use('/api', budgetRouter);
