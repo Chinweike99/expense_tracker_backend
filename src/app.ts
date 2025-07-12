@@ -20,7 +20,8 @@ export const configCors = ()=> {
     return cors({
         origin: (origin, callback) => {
             const allowedOrigins = [
-                process.env.DEPLOYED_FRONTEND || "https://expense-tracker-frontend-fuxw.onrender.com",
+                // process.env.DEPLOYED_FRONTEND || "https://expense-tracker-frontend-fuxw.onrender.com",
+                process.env.DEPLOYED_FRONTEND || "https://expense-pro-bice.vercel.app",
                 process.env.FRONTEND_URL || "http://localhost:3000",
                 process.env.FRONTEND_URL2 || "http://localhost:3001",
                 process.env.FRONTEND_URL3 || "http://localhost:5173"
