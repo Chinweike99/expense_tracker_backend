@@ -80,11 +80,11 @@ export const signup = async(req: Request, res: Response):Promise<void> => {
 
         // Send verification email
         // const verificationUrl = `${frontend_url}/verify-email?token=${verificationToken}`;
-        const url = "https://expense-tracker-frontend-fuxw.onrender.com"
+        const url = "https://expense-pro-bice.vercel.app"
         const verificationUrl = `${url}/verify-email?token=${verificationToken}`;
         
         console.log('Sending email to:', newUser.email);
-        console.log('Verification URL:', verificationUrl); // Debug log
+        console.log('Verification URL:', verificationUrl); 
 
         try {
             await SendEmail({
