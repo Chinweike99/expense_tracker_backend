@@ -9,7 +9,7 @@ import speakeasy from 'speakeasy'
 
 const jwt_secret = process.env.JWT_SECRET as string || "";
 const jwt_expiresIn = process.env.JWT_EXPIRES_IN;
-const frontend_url = process.env.FRONTEND_URL;
+const frontend_url = process.env.DEPLOYED_FRONTEND;
 
 // zod schemas for validation
 const signupSchema = z.object({
@@ -199,7 +199,7 @@ export const verifyEmail = async(req: Request, res: Response): Promise<void> => 
 
         console.log('User verified successfully:', user.email);
         // Redirect to frontend success page
-        // res.redirect(`${frontend_url}/verification-success?status=verified`); // Use when frontend is added
+        res.redirect(`${frontend_url}/verification-success?status=verified`);
 
         res.json({
             status: "Success",
