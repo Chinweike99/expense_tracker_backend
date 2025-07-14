@@ -9,7 +9,8 @@ import speakeasy from 'speakeasy'
 
 const jwt_secret = process.env.JWT_SECRET as string || "";
 const jwt_expiresIn = process.env.JWT_EXPIRES_IN;
-const frontend_url = process.env.DEPLOYED_FRONTEND;
+// const frontend_url = process.env.DEPLOYED_FRONTEND;
+const frontend_url = process.env.FRONTEND_URL;
 
 // zod schemas for validation
 const signupSchema = z.object({
@@ -59,7 +60,6 @@ export const signup = async(req: Request, res: Response):Promise<void> => {
             })
         }
 
-        // Create user but don't save to main collection yet (or mark as unverified)
         const newUser = await User.create({
             name, 
             email, 
@@ -80,7 +80,8 @@ export const signup = async(req: Request, res: Response):Promise<void> => {
 
         // Send verification email
         // const verificationUrl = `${frontend_url}/verify-email?token=${verificationToken}`;
-        const url = "https://expense-tracker-frontend-eight-lake.vercel.app"
+        // const url = "https://expense-tracker-frontend-eight-lake.vercel.app"
+        const url = "http://localhost:3000"
         const verificationUrl = `${url}/verify-email?token=${verificationToken}`;
         
         console.log('Sending email to:', newUser.email);
@@ -108,11 +109,10 @@ export const signup = async(req: Request, res: Response):Promise<void> => {
                 `
             });
             
-            console.log('Email sent successfully'); // Debug log
+            console.log('Email sent successfully');
             
         } catch (emailError) {
             console.log('Email sending failed:', emailError);
-            // Delete the user if email fails
             await User.findByIdAndDelete(newUser._id);
             res.status(500).json({
                 status: "failed",
