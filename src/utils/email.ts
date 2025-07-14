@@ -32,9 +32,11 @@ export const SendEmail = async (options: SendEmailOptions) => {
 
 export const sendVerificationEmail = async (email: string, token: string) => {
   try {
+    
     // Generate the verification URL using the built-in URL module for safer URL construction
-    const clientUrl = process.env.CLIENT_URL || "http://localhost:5000";
-    const verificationUrl = new URL("/verify-email", clientUrl);
+    // const clientUrl = process.env.CLIENT_URL || "http://localhost:5000";
+    const clientUrl = process.env.DEPLOYED_FRONTEND || "https://expense-tracker-frontend-eight-lake.vercel.app";
+    const verificationUrl = new URL("/api/auth/verify-email", clientUrl);
     verificationUrl.searchParams.append("token", token);
 
     const message = `
@@ -63,12 +65,10 @@ export const sendVerificationEmail = async (email: string, token: string) => {
 
 export const sendPasswordResetEmail = async (email: string, token: string) => {
   try {
-    // Generate the verification URL using the built-in URL module for safer URL construction
     const clientUrl = process.env.CLIENT_URL || "http://localhost:5000";
     const resetUrl = new URL("/reset-password", clientUrl);
     resetUrl.searchParams.append("token", token);
 
-    // Construct the HTML message
     const message = `
                   <h1>Reset your Password</h1>
                   <p>Please click the link below to reset your password:</p>
