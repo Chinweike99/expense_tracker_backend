@@ -83,7 +83,6 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
 
     console.log("Verification token generated for:", email);
 
-    // Send verification email with correct URL
     const url = "https://expense-tracker-frontend-eight-lake.vercel.app";
     // const url = "http://localhost:5000"
     // const verificationUrl = `${url}/api/auth/verify-email?token=${verificationToken}`;
