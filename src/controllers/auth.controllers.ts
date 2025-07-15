@@ -83,7 +83,6 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
 
     console.log("Verification token generated for:", email);
 
-    // Send verification email with correct URL
     const url = "https://expense-tracker-frontend-eight-lake.vercel.app";
     // const url = "http://localhost:5000"
     // const verificationUrl = `${url}/api/auth/verify-email?token=${verificationToken}`;
@@ -206,77 +205,143 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
 };
 
 // VERIFY EMAIL - Modified to create user upon verification
-export const verifyEmail = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+// export const verifyEmail = async (
+//   req: Request,
+//   res: Response
+// ): Promise<void> => {
+//   try {
+//     const { token } = verifyEmailSchema.parse(req.query);
+
+//     console.log("Verifying token:", token);
+
+//     let decoded;
+//     try {
+//       decoded = jwt.verify(token, jwt_secret) as {
+//         userData: { name: string; email: string; password: string };
+//       };
+//     } catch (jwtError) {
+//       console.error("JWT verification failed:", jwtError);
+//       res.status(400).json({
+//         status: "failed",
+//         message: "Invalid or expired verification token",
+//       });
+//       return;
+//     }
+
+//     if (!decoded || !decoded.userData) {
+//       res.status(400).json({
+//         status: "failed",
+//         message: "Invalid token format",
+//       });
+//       return;
+//     }
+
+//     const { name, email, password } = decoded.userData;
+
+//     // Check if user already exists and is verified
+//     const existingUser = await User.findOne({ email });
+//     if (existingUser && existingUser.isEmailVerified) {
+//       res.redirect(
+//         `${frontend_url}/verification-success?status=already-verified`
+//       );
+//       return;
+//     }
+
+//     if (existingUser && !existingUser.isEmailVerified) {
+//       await User.findByIdAndDelete(existingUser._id);
+//     }
+
+//     const newUser = await User.create({
+//       name,
+//       email,
+//       password,
+//       isEmailVerified: true,
+//     });
+
+//     console.log("User created and verified successfully:", newUser.email);
+
+//     res.redirect(`${frontend_url}/verification-success?status=verified`);
+//   } catch (error) {
+//     console.error("Email verification error:", error);
+
+//     if (error instanceof z.ZodError) {
+//       res.redirect(
+//         `${frontend_url}/verification-error?message=Invalid token format`
+//       );
+//       return;
+//     }
+
+//     res.redirect(
+//       `${frontend_url}/verification-error?message=Email verification failed`
+//     );
+//   }
+// };
+
+
+export const verifyEmail = async (req: Request, res: Response): Promise<void> => {
   try {
     const { token } = verifyEmailSchema.parse(req.query);
-
-    console.log("Verifying token:", token);
-
-    let decoded;
-    try {
-      decoded = jwt.verify(token, jwt_secret) as {
-        userData: { name: string; email: string; password: string };
-      };
-    } catch (jwtError) {
-      console.error("JWT verification failed:", jwtError);
+    
+    if (!token) {
       res.status(400).json({
-        status: "failed",
-        message: "Invalid or expired verification token",
+        success: false,
+        message: "Verification token is required"
       });
       return;
     }
 
-    if (!decoded || !decoded.userData) {
-      res.status(400).json({
-        status: "failed",
-        message: "Invalid token format",
-      });
-      return;
-    }
-
+    const decoded = jwt.verify(token as string, jwt_secret) as any;
     const { name, email, password } = decoded.userData;
 
-    // Check if user already exists and is verified
+    
     const existingUser = await User.findOne({ email });
     if (existingUser && existingUser.isEmailVerified) {
-      res.redirect(
-        `${frontend_url}/verification-success?status=already-verified`
-      );
+      res.status(400).json({
+        success: false,
+        message: "Email is already verified"
+      });
       return;
-    }
-
-    if (existingUser && !existingUser.isEmailVerified) {
-      await User.findByIdAndDelete(existingUser._id);
     }
 
     const newUser = await User.create({
       name,
       email,
       password,
-      isEmailVerified: true,
+      isEmailVerified: true
     });
 
-    console.log("User created and verified successfully:", newUser.email);
+    // res.status(200).json({
+    //   success: true,
+    //   message: "Email verified successfully! You can now login.",
+    //   data: {
+    //     userId: newUser._id,
+    //     email: newUser.email,
+    //     name: newUser.name
+    //   }
+    // });
+
+    console.log("User created successfully:", newUser.email);
 
     res.redirect(`${frontend_url}/verification-success?status=verified`);
+
   } catch (error) {
-    console.error("Email verification error:", error);
+        console.error("Email verification error:", error);
+    
+        if (error instanceof z.ZodError) {
+          res.redirect(
+            `${frontend_url}/verification-error?message=Invalid token format`
+          );
+          return;
+        }
+    
+        res.redirect(
+          `${frontend_url}/verification-error?message=Email verification failed`
+        );
+      }
+    };
 
-    if (error instanceof z.ZodError) {
-      res.redirect(
-        `${frontend_url}/verification-error?message=Invalid token format`
-      );
-      return;
-    }
 
-    res.redirect(
-      `${frontend_url}/verification-error?message=Email verification failed`
-    );
-  }
-};
+
 
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
