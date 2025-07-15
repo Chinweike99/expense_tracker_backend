@@ -35,11 +35,25 @@ const userSchema = new Schema<IUser>(
 );
 
 // Password hashing middleware
+// userSchema.pre<IUser>('save', async function(next){
+//     if(!this.isModified('password')) return next();
+//     this.password = await argon2.hash(this.password);
+//     next();
+// });
+
+
 userSchema.pre<IUser>('save', async function(next){
     if(!this.isModified('password')) return next();
+    
+    // Check if password is already hashed (Argon2 hashes start with $argon2)
+    if (this.password.startsWith('$argon2')) {
+        return next();
+    }
+    
     this.password = await argon2.hash(this.password);
     next();
 });
+
 
 
 //Method to compare passwords
