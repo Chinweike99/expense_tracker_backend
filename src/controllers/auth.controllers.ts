@@ -79,7 +79,7 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
       },
       jwt_secret,
       { expiresIn: "24h" }
-    );
+    );  
 
     console.log("Verification token generated for:", email);
 
@@ -94,28 +94,27 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
     try {
         await SendEmail({
             email: email,
-            subject: "Welcome to ExpensePro - Please Verify Your Email",
+            subject: "Welcome to XpensePro - Please Verify Your Email",
             html: `
                 <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
                     <!-- Header -->
                     <div style="background: linear-gradient(135deg, #ff6033 0%, #ff8866 100%); padding: 40px 30px; text-align: center; border-radius: 10px 10px 0 0;">
-                        <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600; letter-spacing: -0.5px;">ExpensePro</h1>
+                        <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600; letter-spacing: -0.5px;">XpensePro</h1>
                         <p style="color: rgba(255, 255, 255, 0.9); margin: 8px 0 0 0; font-size: 16px;">Smart Expense Management</p>
                     </div>
                     
                     <!-- Main Content -->
                     <div style="padding: 40px 30px;">
-                        <h2 style="color: #333333; margin: 0 0 20px 0; font-size: 24px; font-weight: 600;">Welcome to ExpensePro, ${name}!</h2>
+                        <h2 style="color: #333333; margin: 0 0 20px 0; font-size: 24px; font-weight: 600;">Welcome to XpensePro, ${name}!</h2>
                         
                         <p style="color: #555555; line-height: 1.6; margin: 0 0 20px 0; font-size: 16px;">
-                            Thank you for choosing ExpensePro to manage your expenses efficiently. We're excited to have you on board!
+                            Thank you for choosing XpensePro to manage your expenses efficiently. We're excited to have you on board!
                         </p>
                         
                         <p style="color: #555555; line-height: 1.6; margin: 0 0 30px 0; font-size: 16px;">
                             To get started and secure your account, please verify your email address by clicking the button below:
                         </p>
-                        
-                        <!-- CTA Button -->
+
                         <div style="text-align: center; margin: 40px 0;">
                             <a href="${verificationUrl.toString()}" 
                                style="background-color: #ff6033; color: white; padding: 16px 32px; 
@@ -156,11 +155,11 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
                     <div style="background-color: #f8f9fa; padding: 30px; text-align: center; border-radius: 0 0 10px 10px; border-top: 1px solid #e9ecef;">
                         <p style="color: #666666; margin: 0 0 15px 0; font-size: 14px;">
                             Questions? We're here to help! Contact our support team at 
-                            <a href="mailto:support@expensepro.com" style="color: #ff6033; text-decoration: none;">support@expensepro.com</a>
+                            <a href="mailto:support@xpensepro.com" style="color: #ff6033; text-decoration: none;">support@xpensepro.com</a>
                         </p>
                         <p style="color: #999999; margin: 0; font-size: 12px;">
-                            © 2025 ExpensePro. All rights reserved.<br>
-                            You're receiving this email because you signed up for an ExpensePro account.
+                            © 2025 XpensePro. All rights reserved.<br>
+                            You're receiving this email because you signed up for an XpensePro account.
                         </p>
                     </div>
                 </div>
